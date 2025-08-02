@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Financeiro para Motorista</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-active {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        .stat-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.2s ease-in-out;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .progress-bar-bg {
+            background-color: #e5e7eb;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        .progress-bar-fg {
+            background-color: #4ade80; /* green-400 */
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div id="app" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Controle Financeiro para Motorista</h1>
+            <p class="text-gray-600 mt-1">Gerencie seus ganhos, gastos e metas de forma simples.</p>
+        </header>
+
+        <!-- Tabs -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                <button id="tab-lancamentos" class="tab-active whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+                    Lançamentos Diários
+                </button>
+                <button id="tab-dashboard" class="text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+                    Painel de Controle
+                </button>
+            </nav>
+        </div>
+
+        <!-- Content -->
+        <div>
+            <!-- Lançamentos Page -->
+            <div id="page-lancamentos">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h2 class="text-xl font-semibold mb-4">Adicionar Novo Lançamento</h2>
+                            <form id="daily-form" class="space-y-4">
+                                <div>
+                                    <label for="date" class="block text-sm font-medium text-gray-700">Data</label>
+                                    <input type="date" id="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="km-inicial" class="block text-sm font-medium text-gray-700">KM Inicial</label>
+                                        <input type="number" id="km-inicial" placeholder="Ex: 50000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                                    </div>
+                                    <div>
+                                        <label for="km-final" class="block text-sm font-medium text-gray-700">KM Final</label>
+                                        <input type="number" id="km-final" placeholder="Ex: 50250" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="viagens" class="block text-sm font-medium text-gray-700">Nº de Viagens</label>
+                                    <input type="number" id="viagens" placeholder="Ex: 25" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="faturamento" class="block text-sm font-medium text-gray-700">Faturamento (R$)</label>
+                                        <input type="number" step="0.01" id="faturamento" placeholder="Ex: 350.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                                    </div>
+                                    <div>
+                                        <label for="combustivel" class="block text-sm font-medium text-gray-700">Combustível (R$)</label>
+                                        <input type="number" step="0.01" id="combustivel" placeholder="Ex: 120.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Salvar Dia
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2">
+                         <h2 class="text-xl font-semibold mb-4">Histórico de Lançamentos</h2>
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KM Rodados</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Viagens</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Faturamento</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Combustível</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lucro</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="entries-table" class="bg-white divide-y divide-gray-200">
+                                        <!-- Rows will be inserted here by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Page -->
+            <div id="page-dashboard" class="hidden">
+                <!-- Visão Geral -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">Visão Geral</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Card: Faturamento Total -->
+                        <div class="stat-card">
+                            <p class="text-sm font-medium text-gray-500 truncate">Faturamento Total</p>
+                            <p id="total-faturamento" class="mt-1 text-3xl font-semibold text-gray-900">R$ 0,00</p>
+                        </div>
+                        <!-- Card: Custo Total -->
+                        <div class="stat-card">
+                            <p class="text-sm font-medium text-gray-500 truncate">Custo Total (Combustível)</p>
+                            <p id="total-custo" class="mt-1 text-3xl font-semibold text-gray-900">R$ 0,00</p>
+                        </div>
+                        <!-- Card: Lucro Total -->
+                        <div class="stat-card">
+                            <p class="text-sm font-medium text-gray-500 truncate">Lucro Total</p>
+                            <p id="total-lucro" class="mt-1 text-3xl font-semibold text-indigo-600">R$ 0,00</p>
+                        </div>
+                         <!-- Card: Lucro Último Dia -->
+                        <div class="stat-card">
+                            <p class="text-sm font-medium text-gray-500 truncate">Lucro do Último Dia</p>
+                            <p id="lucro-ultimo-dia" class="mt-1 text-3xl font-semibold text-gray-900">R$ 0,00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metas -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">Acompanhamento de Metas</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Meta Semanal -->
+                        <div class="stat-card">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Meta Semanal</p>
+                                    <p class="text-2xl font-semibold text-gray-900"><span id="lucro-semana">R$ 0,00</span> / <span class="text-gray-500">R$ 800,00</span></p>
+                                </div>
+                                <p id="progresso-semanal" class="text-green-600 font-semibold">0%</p>
+                            </div>
+                            <div class="mt-4 progress-bar-bg h-2">
+                                <div id="progresso-semanal-bar" class="progress-bar-fg" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <!-- Meta Mensal -->
+                        <div class="stat-card">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Meta Mensal</p>
+                                    <p class="text-2xl font-semibold text-gray-900"><span id="lucro-mes">R$ 0,00</span> / <span class="text-gray-500">R$ 3.200,00</span></p>
+                                </div>
+                                <p id="progresso-mensal" class="text-green-600 font-semibold">0%</p>
+                            </div>
+                            <div class="mt-4 progress-bar-bg h-2">
+                                <div id="progresso-mensal-bar" class="progress-bar-fg" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Médias -->
+                <div>
+                    <h2 class="text-xl font-semibold mb-4">Médias de Desempenho</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="stat-card">
+                            <p class="text-sm font-medium text-gray-500">Faturamento / Viagem</p>
+                            <p id="media-faturamento-viagem" class="mt-1 text-3xl font-semibold text-gray-900">R$ 0,00</p>
+                        </div>
+                        <div class="stat-card">
+                            <p class="text-sm font-medium text-gray-500">Faturamento / KM</p>
+                            <p id="media-faturamento-km" class="mt-1 text-3xl font-semibold text-gray-900">R$ 0,00</p>
+                        </div>
+                        <div class="stat-card">
+                            <p class="text-sm font-medium text-gray-500">Custo / KM</p>
+                            <p id="media-custo-km" class="mt-1 text-3xl font-semibold text-gray-900">R$ 0,00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- ELEMENTOS DO DOM ---
+            const tabLancamentos = document.getElementById('tab-lancamentos');
+            const tabDashboard = document.getElementById('tab-dashboard');
+            const pageLancamentos = document.getElementById('page-lancamentos');
+            const pageDashboard = document.getElementById('page-dashboard');
+            const dailyForm = document.getElementById('daily-form');
+            const entriesTable = document.getElementById('entries-table');
+
+            // --- ESTADO DA APLICAÇÃO ---
+            let entries = JSON.parse(localStorage.getItem('uberEntries')) || [];
+
+            // --- FUNÇÕES AUXILIARES ---
+            const formatCurrency = (value) => {
+                return (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            };
+
+            const formatPercent = (value) => {
+                return `${((value || 0) * 100).toFixed(0)}%`;
+            };
+            
+            const getWeekStartDate = (date) => {
+                const d = new Date(date);
+                const day = d.getDay();
+                // Sunday is 0, Monday is 1, etc. We want Monday as the start.
+                const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+                return new Date(d.setDate(diff));
+            };
+
+            // --- FUNÇÕES DE RENDERIZAÇÃO ---
+            const renderTable = () => {
+                entriesTable.innerHTML = '';
+                if (entries.length === 0) {
+                    entriesTable.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-8">Nenhum lançamento ainda.</td></tr>`;
+                    return;
+                }
+                
+                // Sort entries by date, most recent first
+                const sortedEntries = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                sortedEntries.forEach(entry => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${new Date(entry.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${entry.kmRodados}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${entry.viagens}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatCurrency(entry.faturamento)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatCurrency(entry.combustivel)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600">${formatCurrency(entry.lucro)}</td>
+                    `;
+                    entriesTable.appendChild(row);
+                });
+            };
+
+            const updateDashboard = () => {
+                // --- CÁLCULOS TOTAIS ---
+                const totalFaturamento = entries.reduce((sum, e) => sum + e.faturamento, 0);
+                const totalCusto = entries.reduce((sum, e) => sum + e.combustivel, 0);
+                const totalLucro = totalFaturamento - totalCusto;
+                const totalKm = entries.reduce((sum, e) => sum + e.kmRodados, 0);
+                const totalViagens = entries.reduce((sum, e) => sum + e.viagens, 0);
+                const lucroUltimoDia = entries.length > 0 ? [...entries].sort((a, b) => new Date(b.date) - new Date(a.date))[0].lucro : 0;
+
+                // --- CÁLCULOS SEMANAIS ---
+                const today = new Date();
+                const weekStart = getWeekStartDate(today);
+                weekStart.setHours(0, 0, 0, 0);
+
+                const weeklyEntries = entries.filter(e => {
+                    const entryDate = new Date(e.date);
+                    entryDate.setHours(0,0,0,0);
+                    // Adjust for timezone issues by comparing time values
+                    return entryDate.getTime() >= weekStart.getTime();
+                });
+
+                const lucroSemana = weeklyEntries.reduce((sum, e) => sum + e.lucro, 0);
+                
+                // --- CÁLCULOS MENSAIS (baseado no lucro total) ---
+                const lucroMes = totalLucro; // Simplified to total profit for monthly goal
+
+                // --- METAS ---
+                const metaSemanal = 800;
+                const metaMensal = 3200;
+                const progressoSemanal = lucroSemana / metaSemanal;
+                const progressoMensal = lucroMes / metaMensal;
+
+                // --- MÉDIAS ---
+                const mediaFaturamentoViagem = totalViagens > 0 ? totalFaturamento / totalViagens : 0;
+                const mediaFaturamentoKm = totalKm > 0 ? totalFaturamento / totalKm : 0;
+                const mediaCustoKm = totalKm > 0 ? totalCusto / totalKm : 0;
+
+                // --- ATUALIZAÇÃO DO DOM ---
+                document.getElementById('total-faturamento').textContent = formatCurrency(totalFaturamento);
+                document.getElementById('total-custo').textContent = formatCurrency(totalCusto);
+                document.getElementById('total-lucro').textContent = formatCurrency(totalLucro);
+                document.getElementById('lucro-ultimo-dia').textContent = formatCurrency(lucroUltimoDia);
+                
+                document.getElementById('lucro-semana').textContent = formatCurrency(lucroSemana);
+                document.getElementById('progresso-semanal').textContent = formatPercent(progressoSemanal);
+                document.getElementById('progresso-semanal-bar').style.width = `${Math.min(progressoSemanal * 100, 100)}%`;
+
+                document.getElementById('lucro-mes').textContent = formatCurrency(lucroMes);
+                document.getElementById('progresso-mensal').textContent = formatPercent(progressoMensal);
+                document.getElementById('progresso-mensal-bar').style.width = `${Math.min(progressoMensal * 100, 100)}%`;
+
+                document.getElementById('media-faturamento-viagem').textContent = formatCurrency(mediaFaturamentoViagem);
+                document.getElementById('media-faturamento-km').textContent = formatCurrency(mediaFaturamentoKm);
+                document.getElementById('media-custo-km').textContent = formatCurrency(mediaCustoKm);
+            };
+
+            // --- EVENT LISTENERS ---
+            tabLancamentos.addEventListener('click', () => {
+                tabLancamentos.classList.add('tab-active');
+                tabDashboard.classList.remove('tab-active');
+                pageLancamentos.classList.remove('hidden');
+                pageDashboard.classList.add('hidden');
+            });
+
+            tabDashboard.addEventListener('click', () => {
+                tabDashboard.classList.add('tab-active');
+                tabLancamentos.classList.remove('tab-active');
+                pageDashboard.classList.remove('hidden');
+                pageLancamentos.classList.add('hidden');
+                updateDashboard(); // Always update dashboard on view
+            });
+
+            dailyForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const date = document.getElementById('date').value;
+                const kmInicial = parseFloat(document.getElementById('km-inicial').value);
+                const kmFinal = parseFloat(document.getElementById('km-final').value);
+                const viagens = parseInt(document.getElementById('viagens').value);
+                const faturamento = parseFloat(document.getElementById('faturamento').value);
+                const combustivel = parseFloat(document.getElementById('combustivel').value);
+                
+                if (kmFinal <= kmInicial) {
+                    alert('O KM Final deve ser maior que o KM Inicial.');
+                    return;
+                }
+
+                const newEntry = {
+                    date,
+                    kmInicial,
+                    kmFinal,
+                    viagens,
+                    faturamento,
+                    combustivel,
+                    kmRodados: kmFinal - kmInicial,
+                    lucro: faturamento - combustivel
+                };
+
+                entries.push(newEntry);
+                localStorage.setItem('uberEntries', JSON.stringify(entries));
+
+                dailyForm.reset();
+                // Set date to today by default for next entry
+                document.getElementById('date').valueAsDate = new Date();
+                
+                renderTable();
+                updateDashboard();
+            });
+
+            // --- INICIALIZAÇÃO ---
+            const init = () => {
+                document.getElementById('date').valueAsDate = new Date();
+                renderTable();
+                updateDashboard();
+            };
+
+            init();
+        });
+    </script>
+</body>
+</html>

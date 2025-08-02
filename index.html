@@ -107,33 +107,29 @@
 
     <!-- Modals -->
     <div id="entry-modal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-30">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h2 id="entry-modal-title" class="text-xl font-semibold mb-6">Novo Lançamento</h2><form id="entry-form" class="space-y-4"> ... </form></div></div>
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h2 id="entry-modal-title" class="text-xl font-semibold mb-6"></h2><form id="entry-form" class="space-y-4"></form></div></div>
     </div>
     <div id="expense-modal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-30">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h2 id="expense-modal-title" class="text-xl font-semibold mb-6">Nova Despesa</h2><form id="expense-form" class="space-y-4"> ... </form></div></div>
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h2 id="expense-modal-title" class="text-xl font-semibold mb-6"></h2><form id="expense-form" class="space-y-4"></form></div></div>
     </div>
     <div id="settings-modal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-30">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Configurações</h3><form id="settings-form" class="space-y-4"> ... </form></div></div>
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Configurações</h3><form id="settings-form" class="space-y-4"></form></div></div>
     </div>
 
     <script type="module">
-        // --- GLOBAL STATE ---
         let userSettings = {};
         let allEntries = [];
         let allExpenses = [];
         let chartInstances = {};
         let editingId = null;
 
-        // --- DOM ELEMENTS ---
         const pages = document.querySelectorAll('.page-content');
         const navButtons = document.querySelectorAll('nav button');
         const dashboardPeriodFilter = document.getElementById('dashboard-period-filter');
         
-        // --- UTILS & HELPERS ---
         const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const todayISO = () => new Date().toISOString().split('T')[0];
 
-        // --- DATA PERSISTENCE (localStorage) ---
         const loadData = () => {
             userSettings = JSON.parse(localStorage.getItem('uberAppSettings')) || { autonomia: 12.5, metaMensal: 3200, tier: 'free' };
             allEntries = JSON.parse(localStorage.getItem('uberAppEntries')) || [];
@@ -146,17 +142,18 @@
             localStorage.setItem('uberAppExpenses', JSON.stringify(allExpenses));
         };
 
-        // --- MODAL & FORM HANDLING ---
         const openModal = (modalId, formId, title, data = null, id = null) => {
             const modal = document.getElementById(modalId);
-            document.getElementById(`${formId}-title`).textContent = title;
-            document.getElementById(formId).reset();
+            document.getElementById(`${modalId.replace('-modal', '')}-modal-title`).textContent = title;
+            const form = document.getElementById(formId);
+            form.reset();
             
             if (data) {
                 Object.keys(data).forEach(key => {
-                    const input = document.getElementById(formId).elements[key];
-                    if (input) input.value = data[key];
+                    if (form.elements[key]) form.elements[key].value = data[key];
                 });
+            } else {
+                 if (form.elements.date) form.elements.date.value = todayISO();
             }
             editingId = id;
             modal.classList.remove('hidden');
@@ -167,13 +164,15 @@
             editingId = null;
         };
 
-        // --- RENDERING FUNCTIONS ---
         const renderAll = () => {
             renderDashboard();
             renderEntriesTable();
             renderExpensesTable();
             renderGoals();
             updateTierUI();
+            if(userSettings.tier === 'premium' && document.getElementById('page-reports').classList.contains('hidden') === false) {
+                renderReports();
+            }
         };
 
         const updateTierUI = () => {
@@ -186,46 +185,193 @@
             document.getElementById('reports-premium-overlay').style.display = isPremium ? 'none' : 'flex';
             document.getElementById('goals-premium-overlay').style.display = isPremium ? 'none' : 'flex';
 
-            // Re-render current page if it's a premium one
             const activePage = document.querySelector('.page-content:not(.hidden)');
             if (activePage.id === 'page-reports' || activePage.id === 'page-goals') {
                 if (isPremium) {
                     if (activePage.id === 'page-reports') renderReports();
-                    if (activePage.id === 'page-goals') renderGoals();
+                } else {
+                    if (chartInstances.monthlyPerformance) chartInstances.monthlyPerformance.destroy();
+                    if (chartInstances.expenseBreakdown) chartInstances.expenseBreakdown.destroy();
                 }
             }
         };
 
+        const getFilteredData = () => {
+            const period = dashboardPeriodFilter.value;
+            const now = new Date();
+            let startDate = new Date();
+
+            if (period === 'today') {
+                startDate.setHours(0, 0, 0, 0);
+            } else if (period === 'week') {
+                const dayOfWeek = now.getDay();
+                startDate = new Date(now.setDate(now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)));
+                startDate.setHours(0, 0, 0, 0);
+            } else if (period === 'month') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else { // 'all'
+                startDate = new Date(0);
+            }
+            
+            const filteredEntries = allEntries.filter(e => new Date(e.date) >= startDate);
+            const filteredExpenses = allExpenses.filter(e => new Date(e.date) >= startDate);
+
+            return { filteredEntries, filteredExpenses };
+        };
+
         const renderDashboard = () => {
-            // ... (Full dashboard rendering logic with filter)
+            const { filteredEntries, filteredExpenses } = getFilteredData();
+
+            let totalFaturamento = 0;
+            let totalKm = 0;
+            let totalCustoCombustivel = 0;
+
+            filteredEntries.forEach(entry => {
+                const kmRodados = parseFloat(entry.kmFinal) - parseFloat(entry.kmInicial);
+                totalFaturamento += parseFloat(entry.faturamento);
+                totalKm += kmRodados;
+                totalCustoCombustivel += (kmRodados / userSettings.autonomia) * parseFloat(entry.valorLitro);
+            });
+
+            const totalOutrasDespesas = filteredExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+            const custosTotais = totalCustoCombustivel + totalOutrasDespesas;
+            const lucroLiquido = totalFaturamento - custosTotais;
+            const lucroPorKm = totalKm > 0 ? lucroLiquido / totalKm : 0;
+
+            document.getElementById('kpi-faturamento').textContent = formatCurrency(totalFaturamento);
+            document.getElementById('kpi-custos').textContent = formatCurrency(custosTotais);
+            document.getElementById('kpi-lucro').textContent = formatCurrency(lucroLiquido);
+            document.getElementById('kpi-lucro-km').textContent = formatCurrency(lucroPorKm);
+
+            renderWeeklySummaryChart();
         };
         
         const renderEntriesTable = () => {
-            // ... (Full entry table rendering logic with edit/delete buttons)
+            const tableBody = document.getElementById('entries-table');
+            tableBody.innerHTML = '';
+            const sortedEntries = [...allEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (sortedEntries.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">Nenhum lançamento de ganho encontrado.</td></tr>`;
+                return;
+            }
+
+            sortedEntries.forEach(entry => {
+                const kmRodados = parseFloat(entry.kmFinal) - parseFloat(entry.kmInicial);
+                const custoComb = (kmRodados / userSettings.autonomia) * parseFloat(entry.valorLitro);
+                const lucro = parseFloat(entry.faturamento) - custoComb;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="p-3 text-sm text-gray-700">${new Date(entry.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
+                    <td class="p-3 text-sm text-gray-700">${kmRodados.toFixed(1)}</td>
+                    <td class="p-3 text-sm text-gray-700">${formatCurrency(entry.faturamento)}</td>
+                    <td class="p-3 text-sm text-red-600">${formatCurrency(custoComb)}</td>
+                    <td class="p-3 text-sm font-semibold text-green-600">${formatCurrency(lucro)}</td>
+                    <td class="p-3 text-sm space-x-2">
+                        <button class="edit-entry-btn text-indigo-600 hover:text-indigo-900" data-id="${entry.id}">Editar</button>
+                        <button class="delete-entry-btn text-red-600 hover:text-red-900" data-id="${entry.id}">Excluir</button>
+                    </td>`;
+                tableBody.appendChild(row);
+            });
         };
         
         const renderExpensesTable = () => {
-            // ... (Full expense table rendering logic with edit/delete buttons)
+            const tableBody = document.getElementById('expenses-table');
+            tableBody.innerHTML = '';
+            const sortedExpenses = [...allExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (sortedExpenses.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">Nenhuma despesa encontrada.</td></tr>`;
+                return;
+            }
+            
+            sortedExpenses.forEach(expense => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="p-3 text-sm text-gray-700">${new Date(expense.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
+                    <td class="p-3 text-sm text-gray-700">${expense.description}</td>
+                    <td class="p-3 text-sm text-gray-700">${expense.category}</td>
+                    <td class="p-3 text-sm text-gray-700">${formatCurrency(expense.amount)}</td>
+                    <td class="p-3 text-sm space-x-2">
+                        <button class="edit-expense-btn text-indigo-600 hover:text-indigo-900" data-id="${expense.id}">Editar</button>
+                        <button class="delete-expense-btn text-red-600 hover:text-red-900" data-id="${expense.id}">Excluir</button>
+                    </td>`;
+                tableBody.appendChild(row);
+            });
         };
         
         const renderReports = () => {
             if (userSettings.tier !== 'premium') return;
-            // ... (Full logic to render monthly performance and expense breakdown charts)
+            renderMonthlyPerformanceChart();
+            renderExpenseBreakdownChart();
         };
 
         const renderGoals = () => {
-            // ... (Full logic to render goals progress)
+            const metaMensal = userSettings.metaMensal || 0;
+            document.getElementById('monthly-goal').value = metaMensal;
+            
+            const now = new Date();
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            
+            const monthEntries = allEntries.filter(e => new Date(e.date) >= monthStart);
+            const monthExpenses = allExpenses.filter(e => new Date(e.date) >= monthStart);
+
+            const faturamentoMes = monthEntries.reduce((sum, e) => sum + parseFloat(e.faturamento), 0);
+            const custoCombMes = monthEntries.reduce((sum, e) => sum + ((parseFloat(e.kmFinal) - parseFloat(e.kmInicial)) / userSettings.autonomia) * parseFloat(e.valorLitro), 0);
+            const outrasDespesasMes = monthExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+            const lucroMes = faturamentoMes - custoCombMes - outrasDespesasMes;
+
+            const progresso = metaMensal > 0 ? (lucroMes / metaMensal) * 100 : 0;
+            
+            document.getElementById('goal-progress-bar').style.width = `${Math.min(progresso, 100)}%`;
+            document.getElementById('goal-progress-text').textContent = `${progresso.toFixed(0)}%`;
+            document.getElementById('goal-summary').textContent = `${formatCurrency(lucroMes)} de ${formatCurrency(metaMensal)}`;
         };
 
-        // --- CRUD OPERATIONS ---
         const handleEntrySubmit = (e) => {
             e.preventDefault();
-            // ... (Logic to add/update entry, save data, re-render, and close modal)
+            const form = e.target;
+            const data = {
+                date: form.elements.date.value,
+                kmInicial: form.elements.kmInicial.value,
+                kmFinal: form.elements.kmFinal.value,
+                faturamento: form.elements.faturamento.value,
+                valorLitro: form.elements.valorLitro.value,
+            };
+
+            if (editingId) {
+                const index = allEntries.findIndex(item => item.id === editingId);
+                allEntries[index] = { ...allEntries[index], ...data };
+            } else {
+                data.id = Date.now();
+                allEntries.push(data);
+            }
+            saveData();
+            renderAll();
+            closeModal('entry-modal');
         };
         
         const handleExpenseSubmit = (e) => {
             e.preventDefault();
-            // ... (Logic to add/update expense, save data, re-render, and close modal)
+            const form = e.target;
+            const data = {
+                date: form.elements.date.value,
+                description: form.elements.description.value,
+                category: form.elements.category.value,
+                amount: form.elements.amount.value,
+            };
+
+            if (editingId) {
+                const index = allExpenses.findIndex(item => item.id === editingId);
+                allExpenses[index] = { ...allExpenses[index], ...data };
+            } else {
+                data.id = Date.now();
+                allExpenses.push(data);
+            }
+            saveData();
+            renderAll();
+            closeModal('expense-modal');
         };
 
         const deleteItem = (type, id) => {
@@ -238,58 +384,215 @@
             saveData();
             renderAll();
         };
+        
+        const createChart = (canvasId, config) => {
+            if (chartInstances[canvasId]) {
+                chartInstances[canvasId].destroy();
+            }
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            chartInstances[canvasId] = new Chart(ctx, config);
+        };
 
-        // --- INITIALIZATION ---
+        const renderWeeklySummaryChart = () => {
+            const labels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const faturamentoData = Array(7).fill(0);
+            const lucroData = Array(7).fill(0);
+
+            const now = new Date();
+            const weekStart = new Date(now.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6:1)));
+            weekStart.setHours(0,0,0,0);
+            
+            const weekEntries = allEntries.filter(e => new Date(e.date) >= weekStart);
+            const weekExpenses = allExpenses.filter(e => new Date(e.date) >= weekStart);
+
+            weekEntries.forEach(entry => {
+                const dayIndex = new Date(entry.date).getUTCDay();
+                const custoComb = ((parseFloat(entry.kmFinal) - parseFloat(entry.kmInicial)) / userSettings.autonomia) * parseFloat(entry.valorLitro);
+                faturamentoData[dayIndex] += parseFloat(entry.faturamento);
+                lucroData[dayIndex] += parseFloat(entry.faturamento) - custoComb;
+            });
+            
+            weekExpenses.forEach(expense => {
+                const dayIndex = new Date(expense.date).getUTCDay();
+                lucroData[dayIndex] -= parseFloat(expense.amount);
+            });
+
+            createChart('weekly-summary-chart', {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Faturamento', data: faturamentoData, backgroundColor: 'rgba(59, 130, 246, 0.5)' },
+                        { label: 'Lucro Líquido', data: lucroData, backgroundColor: 'rgba(22, 163, 74, 0.5)' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        };
+
+        const renderMonthlyPerformanceChart = () => {
+            const monthlyData = {};
+            [...allEntries, ...allExpenses].forEach(item => {
+                const month = item.date.substring(0, 7);
+                if (!monthlyData[month]) {
+                    monthlyData[month] = { faturamento: 0, custo: 0, lucro: 0 };
+                }
+            });
+
+            allEntries.forEach(entry => {
+                const month = entry.date.substring(0, 7);
+                const custoComb = ((parseFloat(entry.kmFinal) - parseFloat(entry.kmInicial)) / userSettings.autonomia) * parseFloat(entry.valorLitro);
+                monthlyData[month].faturamento += parseFloat(entry.faturamento);
+                monthlyData[month].custo += custoComb;
+            });
+            
+            allExpenses.forEach(expense => {
+                const month = expense.date.substring(0, 7);
+                monthlyData[month].custo += parseFloat(expense.amount);
+            });
+
+            const sortedMonths = Object.keys(monthlyData).sort();
+            const labels = sortedMonths;
+            const faturamentoData = sortedMonths.map(m => monthlyData[m].faturamento);
+            const custoData = sortedMonths.map(m => monthlyData[m].custo);
+            const lucroData = sortedMonths.map(m => monthlyData[m].faturamento - monthlyData[m].custo);
+
+             createChart('monthly-performance-chart', {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Faturamento', data: faturamentoData, backgroundColor: 'rgba(59, 130, 246, 0.7)' },
+                        { label: 'Custos', data: custoData, backgroundColor: 'rgba(239, 68, 68, 0.7)' },
+                        { label: 'Lucro', data: lucroData, backgroundColor: 'rgba(22, 163, 74, 0.7)' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: false }, y: { stacked: false } } }
+            });
+        };
+
+        const renderExpenseBreakdownChart = () => {
+            const expenseByCategory = {};
+            allExpenses.forEach(expense => {
+                if (!expenseByCategory[expense.category]) {
+                    expenseByCategory[expense.category] = 0;
+                }
+                expenseByCategory[expense.category] += parseFloat(expense.amount);
+            });
+            
+            const labels = Object.keys(expenseByCategory);
+            const data = Object.values(expenseByCategory);
+
+            createChart('expense-breakdown-chart', {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        };
+
         const initializeApp = () => {
             loadData();
 
-            // Populate static modal content
             document.getElementById('entry-modal').querySelector('form').innerHTML = `
                 <input type="hidden" name="id">
-                <div><label class="block text-sm font-medium">Data</label><input type="date" name="date" class="mt-1 block w-full rounded-md border-gray-300" required></div>
+                <div><label class="block text-sm font-medium text-gray-700">Data</label><input type="date" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium">KM Inicial</label><input type="number" name="kmInicial" placeholder="50000" class="mt-1 block w-full rounded-md border-gray-300" required></div>
-                    <div><label class="block text-sm font-medium">KM Final</label><input type="number" name="kmFinal" placeholder="50250" class="mt-1 block w-full rounded-md border-gray-300" required></div>
+                    <div><label class="block text-sm font-medium text-gray-700">KM Inicial</label><input type="number" name="kmInicial" placeholder="50000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                    <div><label class="block text-sm font-medium text-gray-700">KM Final</label><input type="number" name="kmFinal" placeholder="50250" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium">Faturamento (R$)</label><input type="number" step="0.01" name="faturamento" placeholder="350.50" class="mt-1 block w-full rounded-md border-gray-300" required></div>
-                    <div><label class="block text-sm font-medium">Valor Litro (R$)</label><input type="number" step="0.01" name="valorLitro" placeholder="5.50" class="mt-1 block w-full rounded-md border-gray-300" required></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Faturamento (R$)</label><input type="number" step="0.01" name="faturamento" placeholder="350.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Valor Litro (R$)</label><input type="number" step="0.01" name="valorLitro" placeholder="5.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
                 </div>
-                <div class="pt-4 flex justify-end space-x-2"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md">Salvar</button></div>`;
+                <div class="pt-6 flex justify-end space-x-3"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Salvar</button></div>`;
             
             document.getElementById('expense-modal').querySelector('form').innerHTML = `
                 <input type="hidden" name="id">
-                <div><label class="block text-sm font-medium">Data</label><input type="date" name="date" class="mt-1 block w-full rounded-md border-gray-300" required></div>
-                <div><label class="block text-sm font-medium">Descrição</label><input type="text" name="description" placeholder="Ex: Troca de óleo" class="mt-1 block w-full rounded-md border-gray-300" required></div>
+                <div><label class="block text-sm font-medium text-gray-700">Data</label><input type="date" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                <div><label class="block text-sm font-medium text-gray-700">Descrição</label><input type="text" name="description" placeholder="Ex: Troca de óleo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium">Categoria</label><select name="category" class="mt-1 block w-full rounded-md border-gray-300" required><option>Manutenção</option><option>Seguro</option><option>Limpeza</option><option>Impostos</option><option>Alimentação</option><option>Outros</option></select></div>
-                    <div><label class="block text-sm font-medium">Valor (R$)</label><input type="number" step="0.01" name="amount" placeholder="150.00" class="mt-1 block w-full rounded-md border-gray-300" required></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Categoria</label><select name="category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required><option>Manutenção</option><option>Seguro</option><option>Limpeza</option><option>Impostos</option><option>Alimentação</option><option>Outros</option></select></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Valor (R$)</label><input type="number" step="0.01" name="amount" placeholder="150.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
                 </div>
-                <div class="pt-4 flex justify-end space-x-2"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md">Salvar</button></div>`;
+                <div class="pt-6 flex justify-end space-x-3"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Salvar</button></div>`;
 
             document.getElementById('settings-modal').querySelector('form').innerHTML = `
-                <div><label class="block text-sm font-medium">Autonomia do Carro (KM/L)</label><input type="number" step="0.1" id="setting-autonomia" class="mt-1 block w-full rounded-md border-gray-300" required></div>
-                <div><label class="block text-sm font-medium">Seu Plano Atual</label><select id="setting-tier" class="mt-1 block w-full rounded-md border-gray-300"><option value="free">Gratuito (Básico)</option><option value="premium">Premium (PRO)</option></select></div>
-                <div class="pt-4 flex justify-end space-x-2"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md">Salvar Configurações</button></div>`;
+                <div><label class="block text-sm font-medium text-gray-700">Autonomia do Carro (KM/L)</label><input type="number" step="0.1" id="setting-autonomia" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                <div><label class="block text-sm font-medium text-gray-700">Seu Plano Atual (Demo)</label><select id="setting-tier" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="free">Gratuito (Básico)</option><option value="premium">Premium (PRO)</option></select></div>
+                <div class="pt-6 flex justify-end space-x-3"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Salvar Configurações</button></div>`;
 
-            // Setup Event Listeners
-            navButtons.forEach(button => button.addEventListener('click', () => { /* ... nav logic ... */ }));
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const pageId = `page-${button.dataset.page}`;
+                    pages.forEach(page => page.classList.add('hidden'));
+                    document.getElementById(pageId).classList.remove('hidden');
+                    navButtons.forEach(btn => btn.classList.remove('nav-active'));
+                    button.classList.add('nav-active');
+                    if (pageId === 'page-reports' && userSettings.tier === 'premium') {
+                        renderReports();
+                    }
+                });
+            });
+
             dashboardPeriodFilter.addEventListener('change', renderDashboard);
             document.getElementById('add-entry-button').addEventListener('click', () => openModal('entry-modal', 'entry-form', 'Novo Lançamento'));
             document.getElementById('add-expense-button').addEventListener('click', () => openModal('expense-modal', 'expense-form', 'Nova Despesa'));
+            
             document.getElementById('settings-button').addEventListener('click', () => {
                 document.getElementById('setting-autonomia').value = userSettings.autonomia;
                 document.getElementById('setting-tier').value = userSettings.tier;
                 document.getElementById('settings-modal').classList.remove('hidden');
             });
+
             document.getElementById('entry-form').addEventListener('submit', handleEntrySubmit);
             document.getElementById('expense-form').addEventListener('submit', handleExpenseSubmit);
+            document.getElementById('goal-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                userSettings.metaMensal = parseFloat(document.getElementById('monthly-goal').value) || 0;
+                saveData();
+                renderGoals();
+            });
+
+            document.getElementById('settings-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                userSettings.autonomia = parseFloat(document.getElementById('setting-autonomia').value) || 1;
+                userSettings.tier = document.getElementById('setting-tier').value;
+                saveData();
+                renderAll();
+                closeModal('settings-modal');
+            });
             
             document.querySelectorAll('.cancel-button').forEach(btn => btn.addEventListener('click', (e) => {
                 closeModal(e.target.closest('.fixed').id);
             }));
 
-            // ... (More event listeners for settings, goals, etc.)
+            document.getElementById('entries-table').addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-entry-btn')) {
+                    const id = parseInt(e.target.dataset.id);
+                    const entry = allEntries.find(item => item.id === id);
+                    openModal('entry-modal', 'entry-form', 'Editar Lançamento', entry, id);
+                }
+                if (e.target.classList.contains('delete-entry-btn')) {
+                    deleteItem('entry', parseInt(e.target.dataset.id));
+                }
+            });
+
+            document.getElementById('expenses-table').addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-expense-btn')) {
+                    const id = parseInt(e.target.dataset.id);
+                    const expense = allExpenses.find(item => item.id === id);
+                    openModal('expense-modal', 'expense-form', 'Editar Despesa', expense, id);
+                }
+                if (e.target.classList.contains('delete-expense-btn')) {
+                    deleteItem('expense', parseInt(e.target.dataset.id));
+                }
+            });
 
             renderAll();
         };
@@ -298,3 +601,4 @@
     </script>
 </body>
 </html>
+

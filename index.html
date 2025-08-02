@@ -67,8 +67,19 @@
                     <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento</p><p id="kpi-faturamento" class="mt-1 text-3xl font-semibold text-blue-600">R$ 0,00</p></div>
                     <div class="stat-card"><p class="text-sm font-medium text-gray-500">Custos Totais</p><p id="kpi-custos" class="mt-1 text-3xl font-semibold text-red-500">R$ 0,00</p></div>
                     <div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro Líquido</p><p id="kpi-lucro" class="mt-1 text-3xl font-semibold text-green-600">R$ 0,00</p></div>
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro / KM</p><p id="kpi-lucro-km" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div>
+                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Nº de Viagens</p><p id="kpi-viagens" class="mt-1 text-3xl font-semibold">0</p></div>
                 </div>
+
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-700">Médias de Desempenho</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento / Viagem</p><p id="avg-fat-viagem" class="mt-1 text-2xl font-semibold">R$ 0,00</p></div>
+                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento / KM</p><p id="avg-fat-km" class="mt-1 text-2xl font-semibold">R$ 0,00</p></div>
+                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Custo / KM</p><p id="avg-custo-km" class="mt-1 text-2xl font-semibold">R$ 0,00</p></div>
+                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro / KM</p><p id="avg-lucro-km" class="mt-1 text-2xl font-semibold">R$ 0,00</p></div>
+                    </div>
+                </div>
+
                 <div class="bg-white p-6 rounded-lg shadow-sm">
                     <h3 class="text-lg font-semibold mb-4">Resumo da Semana</h3>
                     <div class="chart-container h-64"><canvas id="weekly-summary-chart"></canvas></div>
@@ -78,7 +89,7 @@
             <!-- Entries & Expenses Pages -->
             <div id="page-entries" class="page-content hidden">
                 <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Histórico de Ganhos</h2><button id="add-entry-button" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700">Novo Lançamento</button></div>
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">KM</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Faturamento</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Custo Comb.</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Lucro</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th></tr></thead><tbody id="entries-table" class="bg-white divide-y divide-gray-200"></tbody></table></div></div>
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">KM</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Viagens</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Faturamento</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Custo Comb.</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Lucro</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th></tr></thead><tbody id="entries-table" class="bg-white divide-y divide-gray-200"></tbody></table></div></div>
             </div>
             <div id="page-expenses" class="page-content hidden">
                  <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Controle de Despesas</h2><button id="add-expense-button" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700">Nova Despesa</button></div>
@@ -209,7 +220,7 @@
                 startDate.setHours(0, 0, 0, 0);
             } else if (period === 'month') {
                 startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-            } else { // 'all'
+            } else { 
                 startDate = new Date(0);
             }
             
@@ -225,23 +236,34 @@
             let totalFaturamento = 0;
             let totalKm = 0;
             let totalCustoCombustivel = 0;
+            let totalViagens = 0;
 
             filteredEntries.forEach(entry => {
                 const kmRodados = parseFloat(entry.kmFinal) - parseFloat(entry.kmInicial);
                 totalFaturamento += parseFloat(entry.faturamento);
                 totalKm += kmRodados;
                 totalCustoCombustivel += (kmRodados / userSettings.autonomia) * parseFloat(entry.valorLitro);
+                totalViagens += parseInt(entry.viagens) || 0;
             });
 
             const totalOutrasDespesas = filteredExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
             const custosTotais = totalCustoCombustivel + totalOutrasDespesas;
             const lucroLiquido = totalFaturamento - custosTotais;
+            
+            const fatPerViagem = totalViagens > 0 ? totalFaturamento / totalViagens : 0;
+            const fatPerKm = totalKm > 0 ? totalFaturamento / totalKm : 0;
+            const custoPerKm = totalKm > 0 ? custosTotais / totalKm : 0;
             const lucroPorKm = totalKm > 0 ? lucroLiquido / totalKm : 0;
 
             document.getElementById('kpi-faturamento').textContent = formatCurrency(totalFaturamento);
             document.getElementById('kpi-custos').textContent = formatCurrency(custosTotais);
             document.getElementById('kpi-lucro').textContent = formatCurrency(lucroLiquido);
-            document.getElementById('kpi-lucro-km').textContent = formatCurrency(lucroPorKm);
+            document.getElementById('kpi-viagens').textContent = totalViagens;
+
+            document.getElementById('avg-fat-viagem').textContent = formatCurrency(fatPerViagem);
+            document.getElementById('avg-fat-km').textContent = formatCurrency(fatPerKm);
+            document.getElementById('avg-custo-km').textContent = formatCurrency(custoPerKm);
+            document.getElementById('avg-lucro-km').textContent = formatCurrency(lucroPorKm);
 
             renderWeeklySummaryChart();
         };
@@ -252,7 +274,7 @@
             const sortedEntries = [...allEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (sortedEntries.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">Nenhum lançamento de ganho encontrado.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-gray-500">Nenhum lançamento de ganho encontrado.</td></tr>`;
                 return;
             }
 
@@ -265,6 +287,7 @@
                 row.innerHTML = `
                     <td class="p-3 text-sm text-gray-700">${new Date(entry.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
                     <td class="p-3 text-sm text-gray-700">${kmRodados.toFixed(1)}</td>
+                    <td class="p-3 text-sm text-gray-700">${entry.viagens || 'N/A'}</td>
                     <td class="p-3 text-sm text-gray-700">${formatCurrency(entry.faturamento)}</td>
                     <td class="p-3 text-sm text-red-600">${formatCurrency(custoComb)}</td>
                     <td class="p-3 text-sm font-semibold text-green-600">${formatCurrency(lucro)}</td>
@@ -336,8 +359,10 @@
                 date: form.elements.date.value,
                 kmInicial: form.elements.kmInicial.value,
                 kmFinal: form.elements.kmFinal.value,
+                viagens: form.elements.viagens.value,
                 faturamento: form.elements.faturamento.value,
                 valorLitro: form.elements.valorLitro.value,
+                combustivelAbastecido: form.elements.combustivelAbastecido.value,
             };
 
             if (editingId) {
@@ -508,7 +533,11 @@
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div><label class="block text-sm font-medium text-gray-700">Faturamento (R$)</label><input type="number" step="0.01" name="faturamento" placeholder="350.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Nº de Viagens</label><input type="number" name="viagens" placeholder="25" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
                     <div><label class="block text-sm font-medium text-gray-700">Valor Litro (R$)</label><input type="number" step="0.01" name="valorLitro" placeholder="5.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Valor Abastecido (R$)</label><input type="number" step="0.01" name="combustivelAbastecido" placeholder="120.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
                 </div>
                 <div class="pt-6 flex justify-end space-x-3"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Salvar</button></div>`;
             
@@ -601,4 +630,5 @@
     </script>
 </body>
 </html>
+
 

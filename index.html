@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .tab-active { border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff; }
@@ -16,7 +15,6 @@
         .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
         .progress-bar-bg { background-color: #e5e7eb; border-radius: 9999px; overflow: hidden; }
         .progress-bar-fg { background-color: #4ade80; height: 100%; border-radius: 9999px; transition: width 0.5s ease-in-out; }
-        [v-cloak] { display: none; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -27,6 +25,22 @@
             <h2 id="auth-title" class="text-2xl font-bold text-center text-gray-800 mb-6">Login</h2>
             <div id="auth-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert"></div>
             <form id="auth-form" class="space-y-4">
+                <!-- Additional fields for registration -->
+                <div id="registration-fields" class="hidden space-y-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                        <input type="text" id="name" placeholder="Seu nome" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700">Telefone</label>
+                        <input type="tel" id="phone" placeholder="(XX) XXXXX-XXXX" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="city" class="block text-sm font-medium text-gray-700">Cidade</label>
+                        <input type="text" id="city" placeholder="Sua cidade" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                </div>
+                <!-- Common fields for login and registration -->
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
                     <input type="email" id="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
@@ -50,7 +64,7 @@
     <div id="app-container" class="hidden max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <header class="mb-8 flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Controle Financeiro do Motorista</h1>
+                <h1 class="text-3xl font-bold text-gray-900">Painel de <span id="user-name" class="text-indigo-600"></span></h1>
                 <p class="text-gray-600 mt-1">Seus dados, sempre com você.</p>
             </div>
             <div>
@@ -59,163 +73,31 @@
             </div>
         </header>
 
-        <!-- Tabs -->
+        <!-- Tabs and Content (No changes here) -->
         <div class="mb-6 border-b border-gray-200">
-            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-                <button id="tab-lancamentos" class="tab-active whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">Lançamentos</button>
-                <button id="tab-dashboard" class="text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">Painel de Controle</button>
-            </nav>
+            <nav class="-mb-px flex space-x-6" aria-label="Tabs"><button id="tab-lancamentos" class="tab-active whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">Lançamentos</button><button id="tab-dashboard" class="text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">Painel de Controle</button></nav>
         </div>
-
-        <!-- Content -->
         <div id="page-lancamentos">
              <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-1">
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-xl font-semibold mb-4">Novo Lançamento</h2>
-                        <form id="daily-form" class="space-y-4">
-                            <div>
-                                <label for="date" class="block text-sm font-medium text-gray-700">Data</label>
-                                <input type="date" id="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="km-inicial" class="block text-sm font-medium">KM Inicial</label>
-                                    <input type="number" id="km-inicial" placeholder="50000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                </div>
-                                <div>
-                                    <label for="km-final" class="block text-sm font-medium">KM Final</label>
-                                    <input type="number" id="km-final" placeholder="50250" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                </div>
-                            </div>
-                             <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="viagens" class="block text-sm font-medium">Nº de Viagens</label>
-                                    <input type="number" id="viagens" placeholder="25" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                </div>
-                                <div>
-                                    <label for="valor-litro" class="block text-sm font-medium">Valor Litro (R$)</label>
-                                    <input type="number" step="0.01" id="valor-litro" placeholder="5.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="faturamento" class="block text-sm font-medium">Faturamento (R$)</label>
-                                    <input type="number" step="0.01" id="faturamento" placeholder="350.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                </div>
-                                <div>
-                                    <label for="combustivel" class="block text-sm font-medium">Abastecido (R$)</label>
-                                    <input type="number" step="0.01" id="combustivel" placeholder="120.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                </div>
-                            </div>
-                            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700">Salvar Dia</button>
-                        </form>
-                    </div>
-                </div>
-                <div class="lg:col-span-2">
-                    <h2 class="text-xl font-semibold mb-4">Histórico</h2>
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">KM Rodados</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Faturamento</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Custo Est.</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lucro</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="entries-table" class="bg-white divide-y divide-gray-200"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                <div class="lg:col-span-1"><div class="bg-white p-6 rounded-lg shadow"><h2 class="text-xl font-semibold mb-4">Novo Lançamento</h2><form id="daily-form" class="space-y-4"><div><label for="date" class="block text-sm font-medium text-gray-700">Data</label><input type="date" id="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div><div class="grid grid-cols-2 gap-4"><div><label for="km-inicial" class="block text-sm font-medium">KM Inicial</label><input type="number" id="km-inicial" placeholder="50000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div><div><label for="km-final" class="block text-sm font-medium">KM Final</label><input type="number" id="km-final" placeholder="50250" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div></div><div class="grid grid-cols-2 gap-4"><div><label for="viagens" class="block text-sm font-medium">Nº de Viagens</label><input type="number" id="viagens" placeholder="25" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div><div><label for="valor-litro" class="block text-sm font-medium">Valor Litro (R$)</label><input type="number" step="0.01" id="valor-litro" placeholder="5.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div></div><div class="grid grid-cols-2 gap-4"><div><label for="faturamento" class="block text-sm font-medium">Faturamento (R$)</label><input type="number" step="0.01" id="faturamento" placeholder="350.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div><div><label for="combustivel" class="block text-sm font-medium">Abastecido (R$)</label><input type="number" step="0.01" id="combustivel" placeholder="120.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div></div><button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700">Salvar Dia</button></form></div></div>
+                <div class="lg:col-span-2"><h2 class="text-xl font-semibold mb-4">Histórico</h2><div class="bg-white rounded-lg shadow overflow-hidden"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">KM Rodados</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Faturamento</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Custo Est.</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lucro</th></tr></thead><tbody id="entries-table" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>
             </div>
         </div>
-
         <div id="page-dashboard" class="hidden">
-             <div class="mb-8">
-                <h2 class="text-xl font-semibold mb-4">Visão Geral</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento Total</p><p id="total-faturamento" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div>
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Custo Total (Comb.)</p><p id="total-custo" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div>
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro Total</p><p id="total-lucro" class="mt-1 text-3xl font-semibold text-indigo-600">R$ 0,00</p></div>
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro do Último Dia</p><p id="lucro-ultimo-dia" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div>
-                </div>
-            </div>
-            <div class="mb-8">
-                <h2 class="text-xl font-semibold mb-4">Acompanhamento de Metas</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="stat-card">
-                        <div class="flex justify-between items-start">
-                            <div><p class="text-sm font-medium text-gray-500">Meta Semanal</p><p class="text-2xl font-semibold"><span id="lucro-semana">R$ 0,00</span> / <span class="text-gray-500">R$ 800,00</span></p></div>
-                            <p id="progresso-semanal" class="text-green-600 font-semibold">0%</p>
-                        </div>
-                        <div class="mt-4 progress-bar-bg h-2"><div id="progresso-semanal-bar" class="progress-bar-fg" style="width: 0%;"></div></div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="flex justify-between items-start">
-                             <div><p class="text-sm font-medium text-gray-500">Meta Mensal</p><p class="text-2xl font-semibold"><span id="lucro-mes">R$ 0,00</span> / <span class="text-gray-500">R$ 3.200,00</span></p></div>
-                            <p id="progresso-mensal" class="text-green-600 font-semibold">0%</p>
-                        </div>
-                        <div class="mt-4 progress-bar-bg h-2"><div id="progresso-mensal-bar" class="progress-bar-fg" style="width: 0%;"></div></div>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <h2 class="text-xl font-semibold mb-4">Médias de Desempenho</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento / Viagem</p><p id="media-faturamento-viagem" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div>
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento / KM</p><p id="media-faturamento-km" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div>
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Custo / KM</p><p id="media-custo-km" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div>
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro / KM</p><p id="media-lucro-km" class="mt-1 text-3xl font-semibold text-green-600">R$ 0,00</p></div>
-                </div>
-            </div>
+             <div class="mb-8"><h2 class="text-xl font-semibold mb-4">Visão Geral</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento Total</p><p id="total-faturamento" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div><div class="stat-card"><p class="text-sm font-medium text-gray-500">Custo Total (Comb.)</p><p id="total-custo" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div><div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro Total</p><p id="total-lucro" class="mt-1 text-3xl font-semibold text-indigo-600">R$ 0,00</p></div><div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro do Último Dia</p><p id="lucro-ultimo-dia" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div></div></div>
+             <div class="mb-8"><h2 class="text-xl font-semibold mb-4">Acompanhamento de Metas</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="stat-card"><div class="flex justify-between items-start"><div><p class="text-sm font-medium text-gray-500">Meta Semanal</p><p class="text-2xl font-semibold"><span id="lucro-semana">R$ 0,00</span> / <span class="text-gray-500">R$ 800,00</span></p></div><p id="progresso-semanal" class="text-green-600 font-semibold">0%</p></div><div class="mt-4 progress-bar-bg h-2"><div id="progresso-semanal-bar" class="progress-bar-fg" style="width: 0%;"></div></div></div><div class="stat-card"><div class="flex justify-between items-start"><div><p class="text-sm font-medium text-gray-500">Meta Mensal</p><p class="text-2xl font-semibold"><span id="lucro-mes">R$ 0,00</span> / <span class="text-gray-500">R$ 3.200,00</span></p></div><p id="progresso-mensal" class="text-green-600 font-semibold">0%</p></div><div class="mt-4 progress-bar-bg h-2"><div id="progresso-mensal-bar" class="progress-bar-fg" style="width: 0%;"></div></div></div></div></div>
+             <div><h2 class="text-xl font-semibold mb-4">Médias de Desempenho</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento / Viagem</p><p id="media-faturamento-viagem" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div><div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento / KM</p><p id="media-faturamento-km" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div><div class="stat-card"><p class="text-sm font-medium text-gray-500">Custo / KM</p><p id="media-custo-km" class="mt-1 text-3xl font-semibold">R$ 0,00</p></div><div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro / KM</p><p id="media-lucro-km" class="mt-1 text-3xl font-semibold text-green-600">R$ 0,00</p></div></div></div>
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="settings-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Configurações</h3>
-                <div class="mt-2 px-7 py-3">
-                    <form id="settings-form">
-                        <label for="autonomia" class="block text-sm font-medium text-left">Autonomia do Carro (KM/L)</label>
-                        <input type="number" step="0.1" id="autonomia" placeholder="Ex: 12.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        <div class="items-center px-4 py-3">
-                            <button id="save-settings-button" type="submit" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700">Salvar</button>
-                        </div>
-                    </form>
-                </div>
-                <button id="close-settings-button" class="absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600">&times;</button>
-            </div>
-        </div>
-    </div>
+    <!-- Settings Modal (No changes here) -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full"><div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"><div class="mt-3 text-center"><h3 class="text-lg leading-6 font-medium text-gray-900">Configurações</h3><div class="mt-2 px-7 py-3"><form id="settings-form"><label for="autonomia" class="block text-sm font-medium text-left">Autonomia do Carro (KM/L)</label><input type="number" step="0.1" id="autonomia" placeholder="Ex: 12.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required><div class="items-center px-4 py-3"><button id="save-settings-button" type="submit" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700">Salvar</button></div></form></div><button id="close-settings-button" class="absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600">&times;</button></div></div></div>
 
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signOut, 
-            onAuthStateChanged,
-            signInAnonymously,
-            signInWithCustomToken
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            query, 
-            onSnapshot,
-            doc,
-            setDoc,
-            getDoc
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- FIREBASE CONFIG (DO NOT CHANGE) ---
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
@@ -242,6 +124,8 @@
         const settingsModal = document.getElementById('settings-modal');
         const closeSettingsButton = document.getElementById('close-settings-button');
         const settingsForm = document.getElementById('settings-form');
+        const registrationFields = document.getElementById('registration-fields');
+        const userNameSpan = document.getElementById('user-name');
 
         // --- APP STATE ---
         let isLoginMode = true;
@@ -252,11 +136,29 @@
         // --- AUTH FUNCTIONS ---
         const toggleAuthMode = () => {
             isLoginMode = !isLoginMode;
+            authForm.reset(); // Clear form fields on switch
             authTitle.textContent = isLoginMode ? 'Login' : 'Cadastro';
             authButton.textContent = isLoginMode ? 'Entrar' : 'Cadastrar';
             authSwitchText.textContent = isLoginMode ? 'Não tem uma conta?' : 'Já tem uma conta?';
             authSwitchLink.textContent = isLoginMode ? 'Cadastre-se' : 'Faça Login';
             authError.classList.add('hidden');
+
+            // Show/hide extra fields and set/remove required attribute
+            const nameInput = document.getElementById('name');
+            const phoneInput = document.getElementById('phone');
+            const cityInput = document.getElementById('city');
+
+            if (isLoginMode) {
+                registrationFields.classList.add('hidden');
+                nameInput.required = false;
+                phoneInput.required = false;
+                cityInput.required = false;
+            } else {
+                registrationFields.classList.remove('hidden');
+                nameInput.required = true;
+                phoneInput.required = true;
+                cityInput.required = true;
+            }
         };
 
         const showAuthError = (message) => {
@@ -271,14 +173,31 @@
 
             try {
                 if (isLoginMode) {
+                    // Handle Login
                     await signInWithEmailAndPassword(auth, email, password);
                 } else {
-                    await createUserWithEmailAndPassword(auth, email, password);
+                    // Handle Registration
+                    const name = document.getElementById('name').value;
+                    const phone = document.getElementById('phone').value;
+                    const city = document.getElementById('city').value;
+                    
+                    // 1. Create user in Firebase Auth
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+
+                    // 2. Create user profile document in Firestore
+                    const userProfileRef = doc(db, `artifacts/${appId}/users/${user.uid}/settings/profile`);
+                    await setDoc(userProfileRef, {
+                        nome: name,
+                        telefone: phone,
+                        cidade: city,
+                        autonomia: 0 // Initialize autonomia
+                    });
                 }
                 authError.classList.add('hidden');
             } catch (error) {
-                console.error("Auth Error:", error);
-                showAuthError("Email ou senha inválidos. A senha deve ter no mínimo 6 caracteres.");
+                console.error("Auth Error:", error.code, error.message);
+                showAuthError("Falha na autenticação. Verifique os dados e tente novamente.");
             }
         });
 
@@ -295,12 +214,16 @@
             if (docSnap.exists()) {
                 userSettings = docSnap.data();
                 document.getElementById('autonomia').value = userSettings.autonomia || '';
+                if (userNameSpan && userSettings.nome) {
+                    userNameSpan.textContent = userSettings.nome.split(' ')[0]; // Display first name
+                }
             } else {
-                // If no settings, prompt user to set them
+                console.log("No settings found for user, prompting creation.");
                 settingsModal.classList.remove('hidden');
             }
         };
-
+        
+        // --- Other functions (saveSettings, getEntries, dailyForm submit, renderTable, updateDashboard) remain the same ---
         const saveSettings = async () => {
             const autonomia = parseFloat(document.getElementById('autonomia').value);
             if (!autonomia || autonomia <= 0) {
@@ -309,19 +232,16 @@
             }
             userSettings.autonomia = autonomia;
             const settingsRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/settings/profile`);
-            await setDoc(settingsRef, userSettings);
+            await setDoc(settingsRef, { autonomia: autonomia }, { merge: true }); // Use merge to avoid overwriting other profile data
             settingsModal.classList.add('hidden');
         };
 
         const getEntries = (userId) => {
-            if (entriesUnsubscribe) entriesUnsubscribe(); // Unsubscribe from previous listener
-            
+            if (entriesUnsubscribe) entriesUnsubscribe();
             const entriesRef = collection(db, `artifacts/${appId}/users/${userId}/entries`);
             const q = query(entriesRef);
-
             entriesUnsubscribe = onSnapshot(q, (snapshot) => {
-                const entries = [];
-                snapshot.forEach(doc => entries.push({ id: doc.id, ...doc.data() }));
+                const entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const sortedEntries = entries.sort((a, b) => new Date(b.date) - new Date(a.date));
                 renderTable(sortedEntries);
                 updateDashboard(sortedEntries);
@@ -341,7 +261,6 @@
                 settingsModal.classList.remove('hidden');
                 return;
             }
-            
             const entryData = {
                 date: document.getElementById('date').value,
                 kmInicial,
@@ -351,13 +270,11 @@
                 faturamento: parseFloat(document.getElementById('faturamento').value),
                 combustivelAbastecido: parseFloat(document.getElementById('combustivel').value),
             };
-            
             await addDoc(collection(db, `artifacts/${appId}/users/${currentUser.uid}/entries`), entryData);
             dailyForm.reset();
             document.getElementById('date').valueAsDate = new Date();
         });
 
-        // --- RENDER & UI FUNCTIONS ---
         const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const formatPercent = (value) => `${((value || 0) * 100).toFixed(0)}%`;
 
@@ -367,29 +284,19 @@
                 entriesTable.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 py-8">Nenhum lançamento ainda.</td></tr>`;
                 return;
             }
-
             entries.forEach(entry => {
                 const kmRodados = entry.kmFinal - entry.kmInicial;
-                const custoEstimado = (kmRodados / userSettings.autonomia) * entry.valorLitro;
+                const custoEstimado = (kmRodados / (userSettings.autonomia || 1)) * entry.valorLitro;
                 const lucro = entry.faturamento - custoEstimado;
-
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${new Date(entry.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kmRodados.toFixed(1)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatCurrency(entry.faturamento)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">${formatCurrency(custoEstimado)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">${formatCurrency(lucro)}</td>
-                `;
+                row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${new Date(entry.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kmRodados.toFixed(1)}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatCurrency(entry.faturamento)}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">${formatCurrency(custoEstimado)}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">${formatCurrency(lucro)}</td>`;
                 entriesTable.appendChild(row);
             });
         };
 
         const updateDashboard = (entries) => {
-            if (!userSettings.autonomia) return; // Wait for settings
-
-            let totalFaturamento = 0, totalCustoEstimado = 0, totalKm = 0, totalViagens = 0, totalCombustivelAbastecido = 0;
-            
+            if (!userSettings.autonomia) return;
+            let totalFaturamento = 0, totalCustoEstimado = 0, totalKm = 0, totalViagens = 0;
             entries.forEach(e => {
                 const kmRodados = e.kmFinal - e.kmInicial;
                 const custoEstimadoDia = (kmRodados / userSettings.autonomia) * e.valorLitro;
@@ -397,50 +304,36 @@
                 totalCustoEstimado += custoEstimadoDia;
                 totalKm += kmRodados;
                 totalViagens += e.viagens;
-                totalCombustivelAbastecido += e.combustivelAbastecido;
             });
-            
             const totalLucro = totalFaturamento - totalCustoEstimado;
             const lucroUltimoDia = entries.length > 0 ? (entries[0].faturamento - ((entries[0].kmFinal - entries[0].kmInicial) / userSettings.autonomia) * entries[0].valorLitro) : 0;
-
-            // Weekly calculations
             const today = new Date();
             const weekStart = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)));
             weekStart.setHours(0, 0, 0, 0);
-            
             const weeklyEntries = entries.filter(e => new Date(e.date) >= weekStart);
             const lucroSemana = weeklyEntries.reduce((sum, e) => sum + (e.faturamento - ((e.kmFinal - e.kmInicial) / userSettings.autonomia) * e.valorLitro), 0);
-
-            // Goals
             const progressoSemanal = lucroSemana / 800;
             const progressoMensal = totalLucro / 3200;
-
-            // Averages
             const mediaFaturamentoViagem = totalViagens > 0 ? totalFaturamento / totalViagens : 0;
             const mediaFaturamentoKm = totalKm > 0 ? totalFaturamento / totalKm : 0;
             const mediaCustoKm = totalKm > 0 ? totalCustoEstimado / totalKm : 0;
             const mediaLucroKm = mediaFaturamentoKm - mediaCustoKm;
-
-            // Update DOM
             document.getElementById('total-faturamento').textContent = formatCurrency(totalFaturamento);
             document.getElementById('total-custo').textContent = formatCurrency(totalCustoEstimado);
             document.getElementById('total-lucro').textContent = formatCurrency(totalLucro);
             document.getElementById('lucro-ultimo-dia').textContent = formatCurrency(lucroUltimoDia);
-            
             document.getElementById('lucro-semana').textContent = formatCurrency(lucroSemana);
             document.getElementById('progresso-semanal').textContent = formatPercent(progressoSemanal);
             document.getElementById('progresso-semanal-bar').style.width = `${Math.min(progressoSemanal * 100, 100)}%`;
-
             document.getElementById('lucro-mes').textContent = formatCurrency(totalLucro);
             document.getElementById('progresso-mensal').textContent = formatPercent(progressoMensal);
             document.getElementById('progresso-mensal-bar').style.width = `${Math.min(progressoMensal * 100, 100)}%`;
-
             document.getElementById('media-faturamento-viagem').textContent = formatCurrency(mediaFaturamentoViagem);
             document.getElementById('media-faturamento-km').textContent = formatCurrency(mediaFaturamentoKm);
             document.getElementById('media-custo-km').textContent = formatCurrency(mediaCustoKm);
             document.getElementById('media-lucro-km').textContent = formatCurrency(mediaLucroKm);
         };
-
+        
         // --- APP INITIALIZATION & AUTH STATE CHANGES ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -455,21 +348,17 @@
                 if (entriesUnsubscribe) entriesUnsubscribe();
                 appContainer.classList.add('hidden');
                 authContainer.classList.remove('hidden');
+                userNameSpan.textContent = '';
             }
         });
         
-        // Handle initial auth token if provided by the environment
         (async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    // If no token, we wait for user to login via email/pass
-                    console.log("No initial token, waiting for user login.");
                 }
             } catch (error) {
                 console.error("Error with initial sign-in:", error);
-                // Fallback to anonymous or just show login screen
             }
         })();
 
@@ -481,27 +370,13 @@
             saveSettings();
         });
 
-        // Tabs
+        // Tabs Listeners
         const tabLancamentos = document.getElementById('tab-lancamentos');
         const tabDashboard = document.getElementById('tab-dashboard');
         const pageLancamentos = document.getElementById('page-lancamentos');
         const pageDashboard = document.getElementById('page-dashboard');
-        
-        tabLancamentos.addEventListener('click', () => {
-            tabLancamentos.classList.add('tab-active');
-            tabDashboard.classList.remove('tab-active');
-            pageLancamentos.classList.remove('hidden');
-            pageDashboard.classList.add('hidden');
-        });
-
-        tabDashboard.addEventListener('click', () => {
-            tabDashboard.classList.add('tab-active');
-            tabLancamentos.classList.remove('tab-active');
-            pageDashboard.classList.remove('hidden');
-            pageLancamentos.classList.add('hidden');
-        });
-
+        tabLancamentos.addEventListener('click', () => { tabLancamentos.classList.add('tab-active'); tabDashboard.classList.remove('tab-active'); pageLancamentos.classList.remove('hidden'); pageDashboard.classList.add('hidden'); });
+        tabDashboard.addEventListener('click', () => { tabDashboard.classList.add('tab-active'); tabLancamentos.classList.remove('tab-active'); pageDashboard.classList.remove('hidden'); pageLancamentos.classList.add('hidden'); });
     </script>
 </body>
 </html>
-

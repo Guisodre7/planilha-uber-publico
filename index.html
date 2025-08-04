@@ -17,8 +17,11 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8f7f4; }
         .nav-active { color: #4f46e5; border-bottom-color: #4f46e5; }
         .nav-item { border-bottom: 2px solid transparent; transition: all 0.2s ease-in-out; }
-        .stat-card { background-color: white; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); transition: all 0.2s ease-in-out; }
+        .stat-card { background-color: white; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); transition: all 0.2s ease-in-out; position: relative; }
         .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05); }
+        .info-icon { position: absolute; top: 0.5rem; right: 0.5rem; cursor: pointer; }
+        .info-tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background-color: #333; color: white; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; width: 200px; z-index: 10; margin-bottom: 0.5rem; }
+        .info-icon:hover .info-tooltip { display: block; }
         .modal-backdrop { background-color: rgba(0,0,0,0.5); }
         .premium-overlay { position: absolute; inset: 0; background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 0.75rem; z-index: 10; transition: opacity 0.3s ease-in-out; }
         .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; }
@@ -35,6 +38,7 @@
                     <span id="user-tier-badge" class="text-xs font-bold uppercase p-1 rounded"></span>
                 </div>
                 <div>
+                    <button id="help-button" class="text-gray-500 hover:text-indigo-600 p-2 rounded-full"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button>
                     <button id="settings-button" class="text-gray-500 hover:text-indigo-600 p-2 rounded-full"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></button>
                 </div>
             </div>
@@ -42,10 +46,11 @@
         
         <nav class="bg-white border-b border-gray-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-center space-x-2 sm:space-x-8">
+                <div class="flex justify-center space-x-1 sm:space-x-8">
                     <button data-page="dashboard" class="nav-item nav-active font-medium py-4 px-1 text-sm">Painel</button>
                     <button data-page="entries" class="nav-item font-medium py-4 px-1 text-sm">Lançamentos</button>
                     <button data-page="expenses" class="nav-item font-medium py-4 px-1 text-sm">Despesas</button>
+                    <button data-page="simulator" class="nav-item font-medium py-4 px-1 text-sm">Simulador</button>
                     <button data-page="reports" class="nav-item font-medium py-4 px-1 text-sm">Relatórios</button>
                     <button data-page="goals" class="nav-item font-medium py-4 px-1 text-sm">Metas</button>
                 </div>
@@ -55,7 +60,8 @@
         <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
             <!-- Dashboard Page -->
             <div id="page-dashboard" class="page-content">
-                <div class="flex justify-end mb-4">
+                <div class="flex justify-between items-center mb-4">
+                    <div id="tip-of-the-day" class="text-sm text-gray-600 bg-amber-100 p-3 rounded-lg hidden md:block"></div>
                     <select id="dashboard-period-filter" class="rounded-md border-gray-300 shadow-sm">
                         <option value="today">Hoje</option>
                         <option value="week">Esta Semana</option>
@@ -64,19 +70,19 @@
                     </select>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento</p><p id="kpi-faturamento" class="mt-1 text-3xl font-semibold text-blue-600">R$ 0,00</p></div>
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Custos Totais</p><p id="kpi-custos" class="mt-1 text-3xl font-semibold text-red-500">R$ 0,00</p></div>
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro Líquido</p><p id="kpi-lucro" class="mt-1 text-3xl font-semibold text-green-600">R$ 0,00</p></div>
-                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Nº de Viagens</p><p id="kpi-viagens" class="mt-1 text-3xl font-semibold">0</p></div>
+                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento</p><p id="kpi-faturamento" class="mt-1 text-3xl font-semibold text-blue-600">R$ 0,00</p><div class="info-icon"><svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span class="info-tooltip">Soma de todo o valor bruto recebido das viagens no período selecionado.</span></div></div>
+                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Custos Totais</p><p id="kpi-custos" class="mt-1 text-3xl font-semibold text-red-500">R$ 0,00</p><div class="info-icon"><svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span class="info-tooltip">Soma do custo estimado de combustível (baseado na autonomia) e todas as outras despesas lançadas.</span></div></div>
+                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro Líquido</p><p id="kpi-lucro" class="mt-1 text-3xl font-semibold text-green-600">R$ 0,00</p><div class="info-icon"><svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span class="info-tooltip">Seu ganho real: Faturamento menos todos os custos (combustível + despesas).</span></div></div>
+                    <div class="stat-card"><p class="text-sm font-medium text-gray-500">Nº de Viagens</p><p id="kpi-viagens" class="mt-1 text-3xl font-semibold">0</p><div class="info-icon"><svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span class="info-tooltip">Total de corridas realizadas no período selecionado.</span></div></div>
                 </div>
 
                 <div class="mb-8">
                     <h3 class="text-lg font-semibold mb-4 text-gray-700">Médias de Desempenho</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento / Viagem</p><p id="avg-fat-viagem" class="mt-1 text-2xl font-semibold">R$ 0,00</p></div>
-                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento / KM</p><p id="avg-fat-km" class="mt-1 text-2xl font-semibold">R$ 0,00</p></div>
-                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Custo / KM</p><p id="avg-custo-km" class="mt-1 text-2xl font-semibold">R$ 0,00</p></div>
-                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro / KM</p><p id="avg-lucro-km" class="mt-1 text-2xl font-semibold">R$ 0,00</p></div>
+                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento / Viagem</p><p id="avg-fat-viagem" class="mt-1 text-2xl font-semibold">R$ 0,00</p><div class="info-icon"><svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span class="info-tooltip">Quanto você ganha, em média, por cada corrida. Ajuda a entender a qualidade das suas viagens.</span></div></div>
+                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Faturamento / KM</p><p id="avg-fat-km" class="mt-1 text-2xl font-semibold">R$ 0,00</p><div class="info-icon"><svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span class="info-tooltip">Seu ganho bruto por cada quilômetro rodado.</span></div></div>
+                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Custo / KM</p><p id="avg-custo-km" class="mt-1 text-2xl font-semibold">R$ 0,00</p><div class="info-icon"><svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span class="info-tooltip">Quanto custa para você rodar cada quilômetro, considerando combustível e outras despesas.</span></div></div>
+                        <div class="stat-card"><p class="text-sm font-medium text-gray-500">Lucro / KM</p><p id="avg-lucro-km" class="mt-1 text-2xl font-semibold">R$ 0,00</p><div class="info-icon"><svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span class="info-tooltip">O indicador mais importante: seu lucro líquido real por cada quilômetro rodado.</span></div></div>
                     </div>
                 </div>
 
@@ -86,17 +92,38 @@
                 </div>
             </div>
 
-            <!-- Entries & Expenses Pages -->
+            <!-- Pages -->
             <div id="page-entries" class="page-content hidden">
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4 text-sm text-blue-800"><b>Lembrete:</b> Antes de começar a rodar, anote o <b>KM inicial</b> do seu carro. Ao final do dia, use esta tela para registrar todos os dados da sua jornada.</div>
                 <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Histórico de Ganhos</h2><button id="add-entry-button" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700">Novo Lançamento</button></div>
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">KM</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Viagens</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Faturamento</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Custo Comb.</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Lucro</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th></tr></thead><tbody id="entries-table" class="bg-white divide-y divide-gray-200"></tbody></table></div></div>
             </div>
             <div id="page-expenses" class="page-content hidden">
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4 text-sm text-blue-800"><b>Nota:</b> Registre aqui todas as suas despesas que não são combustível, como alimentação, manutenção e seguro. Isso é crucial para calcular seu lucro real.</div>
                  <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Controle de Despesas</h2><button id="add-expense-button" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700">Nova Despesa</button></div>
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th></tr></thead><tbody id="expenses-table" class="bg-white divide-y divide-gray-200"></tbody></table></div></div>
             </div>
-
-            <!-- Premium Pages -->
+            <div id="page-simulator" class="page-content hidden">
+                <h2 class="text-2xl font-bold mb-4">Simulador de Ganhos</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Insira os dados da simulação</h3>
+                        <form id="simulator-form" class="space-y-4">
+                            <div><label class="block text-sm font-medium">Distância a percorrer (KM)</label><input type="number" id="sim-km" class="mt-1 block w-full rounded-md border-gray-300" placeholder="150" required></div>
+                            <div><label class="block text-sm font-medium">Faturamento estimado (R$)</label><input type="number" step="0.01" id="sim-faturamento" class="mt-1 block w-full rounded-md border-gray-300" placeholder="250" required></div>
+                            <div><label class="block text-sm font-medium">Preço do combustível (R$/L)</label><input type="number" step="0.01" id="sim-preco-litro" class="mt-1 block w-full rounded-md border-gray-300" placeholder="5.80" required></div>
+                            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700">Simular</button>
+                        </form>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-4">Resultado Estimado</h3>
+                        <div id="simulator-results" class="space-y-3">
+                            <div class="flex justify-between"><span>Custo com combustível:</span><span id="sim-res-custo" class="font-semibold">R$ 0,00</span></div>
+                            <div class="flex justify-between text-xl"><span>Lucro líquido estimado:</span><span id="sim-res-lucro" class="font-bold text-green-600">R$ 0,00</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div id="page-reports" class="page-content hidden relative">
                 <div id="reports-premium-overlay" class="premium-overlay hidden"><div class="p-4 bg-gray-100 rounded-lg shadow-md"><h3 class="font-bold text-lg text-gray-800">Recurso Premium</h3><p class="text-gray-600">Análises detalhadas estão disponíveis no plano PRO.</p><button class="mt-2 inline-block text-indigo-600 font-semibold" onclick="document.getElementById('settings-button').click()">Faça o Upgrade nas Configurações</button></div></div>
                 <h2 class="text-2xl font-bold mb-4">Relatórios de Desempenho</h2>
@@ -108,24 +135,53 @@
             <div id="page-goals" class="page-content hidden relative">
                 <div id="goals-premium-overlay" class="premium-overlay hidden"><div class="p-4 bg-gray-100 rounded-lg shadow-md"><h3 class="font-bold text-lg text-gray-800">Recurso Premium</h3><p class="text-gray-600">Defina e acompanhe suas metas com o plano PRO.</p><button class="mt-2 inline-block text-indigo-600 font-semibold" onclick="document.getElementById('settings-button').click()">Faça o Upgrade nas Configurações</button></div></div>
                 <h2 class="text-2xl font-bold mb-4">Minhas Metas</h2>
-                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto">
-                    <form id="goal-form" class="mb-8"><label for="monthly-goal" class="block text-sm font-medium text-gray-700">Defina sua meta de lucro mensal (R$)</label><div class="mt-1 flex rounded-md shadow-sm"><input type="number" id="monthly-goal" class="flex-1 block w-full rounded-none rounded-l-md border-gray-300" placeholder="3200"><button type="submit" class="inline-flex items-center px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100">Salvar</button></div></form>
-                    <div><div class="flex justify-between mb-1"><span class="text-base font-medium text-indigo-700">Progresso da Meta Mensal</span><span id="goal-progress-text" class="text-sm font-medium text-indigo-700">0%</span></div><div class="w-full bg-gray-200 rounded-full h-4"><div id="goal-progress-bar" class="bg-indigo-600 h-4 rounded-full transition-all duration-500" style="width: 0%"></div></div><p id="goal-summary" class="text-center mt-2 text-sm text-gray-600"></p></div>
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6 text-sm text-blue-800"><b>Nota:</b> Defina suas metas para visualizar seu progresso. Acompanhar metas ajuda a manter o foco e a motivação!</div>
+                <div class="bg-white p-6 rounded-lg shadow-sm max-w-4xl mx-auto">
+                    <form id="goal-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                        <div><label class="block text-sm font-medium">Meta de Lucro Diário (R$)</label><input type="number" id="goal-daily" class="mt-1 block w-full rounded-md border-gray-300" placeholder="200"></div>
+                        <div><label class="block text-sm font-medium">Meta de Lucro Semanal (R$)</label><input type="number" id="goal-weekly" class="mt-1 block w-full rounded-md border-gray-300" placeholder="1000"></div>
+                        <div><label class="block text-sm font-medium">Meta de Lucro Mensal (R$)</label><input type="number" id="goal-monthly" class="mt-1 block w-full rounded-md border-gray-300" placeholder="4000"></div>
+                        <div class="md:col-span-3"><button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700">Salvar Metas</button></div>
+                    </form>
+                    <div class="space-y-6">
+                        <div><div class="flex justify-between mb-1"><span class="text-base font-medium text-indigo-700">Progresso Meta Diária</span><span id="goal-progress-text-daily" class="text-sm font-medium"></span></div><div class="w-full bg-gray-200 rounded-full h-4"><div id="goal-progress-bar-daily" class="bg-green-500 h-4 rounded-full" style="width: 0%"></div></div></div>
+                        <div><div class="flex justify-between mb-1"><span class="text-base font-medium text-indigo-700">Progresso Meta Semanal</span><span id="goal-progress-text-weekly" class="text-sm font-medium"></span></div><div class="w-full bg-gray-200 rounded-full h-4"><div id="goal-progress-bar-weekly" class="bg-blue-500 h-4 rounded-full" style="width: 0%"></div></div></div>
+                        <div><div class="flex justify-between mb-1"><span class="text-base font-medium text-indigo-700">Progresso Meta Mensal</span><span id="goal-progress-text-monthly" class="text-sm font-medium"></span></div><div class="w-full bg-gray-200 rounded-full h-4"><div id="goal-progress-bar-monthly" class="bg-indigo-600 h-4 rounded-full" style="width: 0%"></div></div></div>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-sm max-w-4xl mx-auto mt-8">
+                    <h3 class="text-lg font-semibold mb-4">Desafios</h3>
+                    <div id="challenges-container" class="space-y-2 text-sm text-gray-700"></div>
+                 </div>
+                 <div class="max-w-4xl mx-auto mt-8">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Educação Financeira: Pílulas de Conhecimento</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-indigo-50 p-4 rounded-lg"><h4 class="font-semibold text-indigo-700 mb-2">Economia de Combustível</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Mantenha os pneus calibrados.</li><li>Evite acelerações e frenagens bruscas.</li><li>Não carregue peso desnecessário no carro.</li></ul></div>
+                        <div class="bg-amber-50 p-4 rounded-lg"><h4 class="font-semibold text-amber-700 mb-2">Manutenção Preventiva</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Troque o óleo e os filtros nos prazos corretos.</li><li>Verifique o alinhamento e balanceamento regularmente.</li><li>Esteja atento a qualquer barulho diferente do carro.</li></ul></div>
+                        <div class="bg-green-50 p-4 rounded-lg"><h4 class="font-semibold text-green-700 mb-2">Gestão Financeira</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Reserve uma % dos ganhos para despesas futuras (IPVA, seguro).</li><li>Tenha uma conta bancária separada para o trabalho.</li><li>Analise seus relatórios para entender seus dias mais lucrativos.</li></ul></div>
+                        <div class="bg-blue-50 p-4 rounded-lg"><h4 class="font-semibold text-blue-700 mb-2">Maximizando Ganhos</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Trabalhe em horários de alta demanda (tarifas dinâmicas).</li><li>Ofereça um excelente serviço para boas avaliações e gorjetas.</li><li>Conheça bem a sua cidade para otimizar rotas.</li></ul></div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
     <!-- Modals -->
-    <div id="entry-modal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-30">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h2 id="entry-modal-title" class="text-xl font-semibold mb-6"></h2><form id="entry-form" class="space-y-4"></form></div></div>
+    <div id="tutorial-modal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-40">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 text-center">
+            <h2 class="text-2xl font-bold mb-4">Bem-vindo ao seu Assistente Financeiro!</h2>
+            <p class="text-gray-600 mb-6">Siga estes 3 passos para começar a ter o controle total dos seus ganhos:</p>
+            <div class="space-y-4 text-left">
+                <div class="flex items-start space-x-3"><div class="flex-shrink-0 h-6 w-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">1</div><div><h3 class="font-semibold">Configure seu Veículo</h3><p class="text-sm text-gray-500">Vá em <span class="font-bold">Configurações</span> (ícone de engrenagem) e informe a autonomia do seu automóvel. Isso é essencial para o cálculo preciso dos custos.</p></div></div>
+                <div class="flex items-start space-x-3"><div class="flex-shrink-0 h-6 w-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">2</div><div><h3 class="font-semibold">Registre Tudo</h3><p class="text-sm text-gray-500">Use a aba <span class="font-bold">Lançamentos</span> para seus ganhos diários e a aba <span class="font-bold">Despesas</span> para todos os outros gastos (manutenção, alimentação, etc).</p></div></div>
+                <div class="flex items-start space-x-3"><div class="flex-shrink-0 h-6 w-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">3</div><div><h3 class="font-semibold">Acompanhe e Otimize</h3><p class="text-sm text-gray-500">Explore o <span class="font-bold">Painel</span> e os <span class="font-bold">Relatórios</span> para entender seus resultados e descobrir como lucrar mais!</p></div></div>
+            </div>
+            <button id="close-tutorial-button" class="mt-8 bg-indigo-600 text-white font-semibold py-2 px-6 rounded-md hover:bg-indigo-700">Entendi, vamos começar!</button>
+        </div>
     </div>
-    <div id="expense-modal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-30">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h2 id="expense-modal-title" class="text-xl font-semibold mb-6"></h2><form id="expense-form" class="space-y-4"></form></div></div>
-    </div>
-    <div id="settings-modal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-30">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Configurações</h3><form id="settings-form" class="space-y-4"></form></div></div>
-    </div>
+    <div id="entry-modal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-30"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h2 id="entry-modal-title" class="text-xl font-semibold mb-6"></h2><form id="entry-form" class="space-y-4"></form></div></div></div>
+    <div id="expense-modal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-30"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h2 id="expense-modal-title" class="text-xl font-semibold mb-6"></h2><form id="expense-form" class="space-y-4"></form></div></div></div>
+    <div id="settings-modal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-30"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6"><h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Configurações</h3><form id="settings-form" class="space-y-4"></form></div></div></div>
 
     <script type="module">
         let userSettings = {};
@@ -141,8 +197,16 @@
         const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const todayISO = () => new Date().toISOString().split('T')[0];
 
+        const tips = [
+            "Manter os pneus calibrados pode economizar até 3% de combustível.",
+            "Evite acelerações e frenagens bruscas para um consumo mais eficiente.",
+            "Planeje suas rotas para evitar trânsito e economizar tempo e combustível.",
+            "Limpar o carro regularmente pode melhorar a avaliação dos passageiros.",
+            "Considere reservar uma pequena parte do seu lucro diário para manutenções futuras."
+        ];
+
         const loadData = () => {
-            userSettings = JSON.parse(localStorage.getItem('uberAppSettings')) || { autonomia: 12.5, metaMensal: 3200, tier: 'free' };
+            userSettings = JSON.parse(localStorage.getItem('uberAppSettings')) || { autonomia: 12.5, metaDiaria: 200, metaSemanal: 1000, metaMensal: 4000, tier: 'free', hasSeenTutorial: false, challengeStreak: 0, lastDateChecked: '1970-01-01' };
             allEntries = JSON.parse(localStorage.getItem('uberAppEntries')) || [];
             allExpenses = JSON.parse(localStorage.getItem('uberAppExpenses')) || [];
         };
@@ -181,7 +245,7 @@
             renderExpensesTable();
             renderGoals();
             updateTierUI();
-            if(userSettings.tier === 'premium' && document.getElementById('page-reports').classList.contains('hidden') === false) {
+            if(userSettings.tier === 'premium' && !document.getElementById('page-reports').classList.contains('hidden')) {
                 renderReports();
             }
         };
@@ -190,14 +254,11 @@
             const badge = document.getElementById('user-tier-badge');
             badge.textContent = userSettings.tier;
             const isPremium = userSettings.tier === 'premium';
-            
             badge.className = `text-xs font-bold uppercase p-1 rounded ${isPremium ? 'bg-amber-100 text-amber-800' : 'bg-gray-200 text-gray-800'}`;
-            
             document.getElementById('reports-premium-overlay').style.display = isPremium ? 'none' : 'flex';
             document.getElementById('goals-premium-overlay').style.display = isPremium ? 'none' : 'flex';
-
             const activePage = document.querySelector('.page-content:not(.hidden)');
-            if (activePage.id === 'page-reports' || activePage.id === 'page-goals') {
+            if (activePage && (activePage.id === 'page-reports' || activePage.id === 'page-goals')) {
                 if (isPremium) {
                     if (activePage.id === 'page-reports') renderReports();
                 } else {
@@ -207,37 +268,28 @@
             }
         };
 
-        const getFilteredData = () => {
-            const period = dashboardPeriodFilter.value;
+        const getFilteredData = (period) => {
             const now = new Date();
             let startDate = new Date();
-
             if (period === 'today') {
                 startDate.setHours(0, 0, 0, 0);
             } else if (period === 'week') {
                 const dayOfWeek = now.getDay();
-                startDate = new Date(now.setDate(now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)));
+                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
                 startDate.setHours(0, 0, 0, 0);
             } else if (period === 'month') {
                 startDate = new Date(now.getFullYear(), now.getMonth(), 1);
             } else { 
                 startDate = new Date(0);
             }
-            
             const filteredEntries = allEntries.filter(e => new Date(e.date) >= startDate);
             const filteredExpenses = allExpenses.filter(e => new Date(e.date) >= startDate);
-
             return { filteredEntries, filteredExpenses };
         };
 
         const renderDashboard = () => {
-            const { filteredEntries, filteredExpenses } = getFilteredData();
-
-            let totalFaturamento = 0;
-            let totalKm = 0;
-            let totalCustoCombustivel = 0;
-            let totalViagens = 0;
-
+            const { filteredEntries, filteredExpenses } = getFilteredData(dashboardPeriodFilter.value);
+            let totalFaturamento = 0, totalKm = 0, totalCustoCombustivel = 0, totalViagens = 0;
             filteredEntries.forEach(entry => {
                 const kmRodados = parseFloat(entry.kmFinal) - parseFloat(entry.kmInicial);
                 totalFaturamento += parseFloat(entry.faturamento);
@@ -245,26 +297,21 @@
                 totalCustoCombustivel += (kmRodados / userSettings.autonomia) * parseFloat(entry.valorLitro);
                 totalViagens += parseInt(entry.viagens) || 0;
             });
-
             const totalOutrasDespesas = filteredExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
             const custosTotais = totalCustoCombustivel + totalOutrasDespesas;
             const lucroLiquido = totalFaturamento - custosTotais;
-            
             const fatPerViagem = totalViagens > 0 ? totalFaturamento / totalViagens : 0;
             const fatPerKm = totalKm > 0 ? totalFaturamento / totalKm : 0;
             const custoPerKm = totalKm > 0 ? custosTotais / totalKm : 0;
             const lucroPorKm = totalKm > 0 ? lucroLiquido / totalKm : 0;
-
             document.getElementById('kpi-faturamento').textContent = formatCurrency(totalFaturamento);
             document.getElementById('kpi-custos').textContent = formatCurrency(custosTotais);
             document.getElementById('kpi-lucro').textContent = formatCurrency(lucroLiquido);
             document.getElementById('kpi-viagens').textContent = totalViagens;
-
             document.getElementById('avg-fat-viagem').textContent = formatCurrency(fatPerViagem);
             document.getElementById('avg-fat-km').textContent = formatCurrency(fatPerKm);
             document.getElementById('avg-custo-km').textContent = formatCurrency(custoPerKm);
             document.getElementById('avg-lucro-km').textContent = formatCurrency(lucroPorKm);
-
             renderWeeklySummaryChart();
         };
         
@@ -272,29 +319,16 @@
             const tableBody = document.getElementById('entries-table');
             tableBody.innerHTML = '';
             const sortedEntries = [...allEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
-
             if (sortedEntries.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-gray-500">Nenhum lançamento de ganho encontrado.</td></tr>`;
                 return;
             }
-
             sortedEntries.forEach(entry => {
                 const kmRodados = parseFloat(entry.kmFinal) - parseFloat(entry.kmInicial);
                 const custoComb = (kmRodados / userSettings.autonomia) * parseFloat(entry.valorLitro);
                 const lucro = parseFloat(entry.faturamento) - custoComb;
-
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="p-3 text-sm text-gray-700">${new Date(entry.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
-                    <td class="p-3 text-sm text-gray-700">${kmRodados.toFixed(1)}</td>
-                    <td class="p-3 text-sm text-gray-700">${entry.viagens || 'N/A'}</td>
-                    <td class="p-3 text-sm text-gray-700">${formatCurrency(entry.faturamento)}</td>
-                    <td class="p-3 text-sm text-red-600">${formatCurrency(custoComb)}</td>
-                    <td class="p-3 text-sm font-semibold text-green-600">${formatCurrency(lucro)}</td>
-                    <td class="p-3 text-sm space-x-2">
-                        <button class="edit-entry-btn text-indigo-600 hover:text-indigo-900" data-id="${entry.id}">Editar</button>
-                        <button class="delete-entry-btn text-red-600 hover:text-red-900" data-id="${entry.id}">Excluir</button>
-                    </td>`;
+                row.innerHTML = `<td class="p-3 text-sm text-gray-700">${new Date(entry.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td><td class="p-3 text-sm text-gray-700">${kmRodados.toFixed(1)}</td><td class="p-3 text-sm text-gray-700">${entry.viagens || 'N/A'}</td><td class="p-3 text-sm text-gray-700">${formatCurrency(entry.faturamento)}</td><td class="p-3 text-sm text-red-600">${formatCurrency(custoComb)}</td><td class="p-3 text-sm font-semibold text-green-600">${formatCurrency(lucro)}</td><td class="p-3 text-sm space-x-2"><button class="edit-entry-btn text-indigo-600 hover:text-indigo-900" data-id="${entry.id}">Editar</button><button class="delete-entry-btn text-red-600 hover:text-red-900" data-id="${entry.id}">Excluir</button></td>`;
                 tableBody.appendChild(row);
             });
         };
@@ -303,23 +337,13 @@
             const tableBody = document.getElementById('expenses-table');
             tableBody.innerHTML = '';
             const sortedExpenses = [...allExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
-
             if (sortedExpenses.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">Nenhuma despesa encontrada.</td></tr>`;
                 return;
             }
-            
             sortedExpenses.forEach(expense => {
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="p-3 text-sm text-gray-700">${new Date(expense.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
-                    <td class="p-3 text-sm text-gray-700">${expense.description}</td>
-                    <td class="p-3 text-sm text-gray-700">${expense.category}</td>
-                    <td class="p-3 text-sm text-gray-700">${formatCurrency(expense.amount)}</td>
-                    <td class="p-3 text-sm space-x-2">
-                        <button class="edit-expense-btn text-indigo-600 hover:text-indigo-900" data-id="${expense.id}">Editar</button>
-                        <button class="delete-expense-btn text-red-600 hover:text-red-900" data-id="${expense.id}">Excluir</button>
-                    </td>`;
+                row.innerHTML = `<td class="p-3 text-sm text-gray-700">${new Date(expense.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td><td class="p-3 text-sm text-gray-700">${expense.description}</td><td class="p-3 text-sm text-gray-700">${expense.category}</td><td class="p-3 text-sm text-gray-700">${formatCurrency(expense.amount)}</td><td class="p-3 text-sm space-x-2"><button class="edit-expense-btn text-indigo-600 hover:text-indigo-900" data-id="${expense.id}">Editar</button><button class="delete-expense-btn text-red-600 hover:text-red-900" data-id="${expense.id}">Excluir</button></td>`;
                 tableBody.appendChild(row);
             });
         };
@@ -331,25 +355,58 @@
         };
 
         const renderGoals = () => {
-            const metaMensal = userSettings.metaMensal || 0;
-            document.getElementById('monthly-goal').value = metaMensal;
+            document.getElementById('goal-daily').value = userSettings.metaDiaria;
+            document.getElementById('goal-weekly').value = userSettings.metaSemanal;
+            document.getElementById('goal-monthly').value = userSettings.metaMensal;
             
-            const now = new Date();
-            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-            
-            const monthEntries = allEntries.filter(e => new Date(e.date) >= monthStart);
-            const monthExpenses = allExpenses.filter(e => new Date(e.date) >= monthStart);
+            const { filteredEntries: dailyData, filteredExpenses: dailyExpenses } = getFilteredData('today');
+            const { filteredEntries: weeklyData, filteredExpenses: weeklyExpenses } = getFilteredData('week');
+            const { filteredEntries: monthlyData, filteredExpenses: monthlyExpenses } = getFilteredData('month');
 
-            const faturamentoMes = monthEntries.reduce((sum, e) => sum + parseFloat(e.faturamento), 0);
-            const custoCombMes = monthEntries.reduce((sum, e) => sum + ((parseFloat(e.kmFinal) - parseFloat(e.kmInicial)) / userSettings.autonomia) * parseFloat(e.valorLitro), 0);
-            const outrasDespesasMes = monthExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
-            const lucroMes = faturamentoMes - custoCombMes - outrasDespesasMes;
+            const calcLucro = (entries, expenses) => entries.reduce((sum, e) => sum + (parseFloat(e.faturamento) - ((parseFloat(e.kmFinal) - parseFloat(e.kmInicial)) / userSettings.autonomia) * parseFloat(e.valorLitro)), 0) - expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
 
-            const progresso = metaMensal > 0 ? (lucroMes / metaMensal) * 100 : 0;
+            const lucroDiario = calcLucro(dailyData, dailyExpenses);
+            const lucroSemanal = calcLucro(weeklyData, weeklyExpenses);
+            const lucroMensal = calcLucro(monthlyData, monthlyExpenses);
             
-            document.getElementById('goal-progress-bar').style.width = `${Math.min(progresso, 100)}%`;
-            document.getElementById('goal-progress-text').textContent = `${progresso.toFixed(0)}%`;
-            document.getElementById('goal-summary').textContent = `${formatCurrency(lucroMes)} de ${formatCurrency(metaMensal)}`;
+            const updateProgress = (type, lucro, meta) => {
+                const progresso = meta > 0 ? (lucro / meta) * 100 : 0;
+                document.getElementById(`goal-progress-bar-${type}`).style.width = `${Math.min(progresso, 100)}%`;
+                document.getElementById(`goal-progress-text-${type}`).textContent = `${formatCurrency(lucro)} / ${formatCurrency(meta)} (${progresso.toFixed(0)}%)`;
+            };
+
+            updateProgress('daily', lucroDiario, userSettings.metaDiaria);
+            updateProgress('weekly', lucroSemanal, userSettings.metaSemanal);
+            updateProgress('monthly', lucroMensal, userSettings.metaMensal);
+            
+            renderChallenges(lucroDiario);
+        };
+        
+        const renderChallenges = (lucroDiario) => {
+            const container = document.getElementById('challenges-container');
+            let streak = userSettings.challengeStreak || 0;
+            container.innerHTML = `<div>Dias seguidos batendo a meta diária: <span class="font-bold text-indigo-600">${streak}</span></div>`;
+        };
+        
+        const checkChallenges = () => {
+            const yesterday = new Date();
+            yesterday.setHours(0,0,0,0);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            const lastDateChecked = new Date(userSettings.lastDateChecked || '1970-01-01');
+
+            if (lastDateChecked < yesterday) {
+                userSettings.challengeStreak = 0;
+            }
+
+            const { filteredEntries, filteredExpenses } = getFilteredData('today');
+            const lucroDiario = filteredEntries.reduce((sum, e) => sum + (parseFloat(e.faturamento) - ((parseFloat(e.kmFinal) - parseFloat(e.kmInicial)) / userSettings.autonomia) * parseFloat(e.valorLitro)), 0) - filteredExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+
+            if (lucroDiario >= userSettings.metaDiaria && userSettings.lastDateChecked !== todayISO()) {
+                 userSettings.challengeStreak = (userSettings.challengeStreak || 0) + 1;
+            }
+            userSettings.lastDateChecked = todayISO();
+            saveData();
         };
 
         const handleEntrySubmit = (e) => {
@@ -364,7 +421,6 @@
                 valorLitro: form.elements.valorLitro.value,
                 combustivelAbastecido: form.elements.combustivelAbastecido.value,
             };
-
             if (editingId) {
                 const index = allEntries.findIndex(item => item.id === editingId);
                 allEntries[index] = { ...allEntries[index], ...data };
@@ -373,6 +429,7 @@
                 allEntries.push(data);
             }
             saveData();
+            checkChallenges();
             renderAll();
             closeModal('entry-modal');
         };
@@ -380,13 +437,7 @@
         const handleExpenseSubmit = (e) => {
             e.preventDefault();
             const form = e.target;
-            const data = {
-                date: form.elements.date.value,
-                description: form.elements.description.value,
-                category: form.elements.category.value,
-                amount: form.elements.amount.value,
-            };
-
+            const data = { date: form.elements.date.value, description: form.elements.description.value, category: form.elements.category.value, amount: form.elements.amount.value };
             if (editingId) {
                 const index = allExpenses.findIndex(item => item.id === editingId);
                 allExpenses[index] = { ...allExpenses[index], ...data };
@@ -401,161 +452,76 @@
 
         const deleteItem = (type, id) => {
             if (!confirm('Tem certeza que deseja excluir este item?')) return;
-            if (type === 'entry') {
-                allEntries = allEntries.filter(item => item.id !== id);
-            } else if (type === 'expense') {
-                allExpenses = allExpenses.filter(item => item.id !== id);
-            }
+            if (type === 'entry') allEntries = allEntries.filter(item => item.id !== id);
+            else if (type === 'expense') allExpenses = allExpenses.filter(item => item.id !== id);
             saveData();
             renderAll();
         };
         
         const createChart = (canvasId, config) => {
-            if (chartInstances[canvasId]) {
-                chartInstances[canvasId].destroy();
-            }
+            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
             const ctx = document.getElementById(canvasId).getContext('2d');
             chartInstances[canvasId] = new Chart(ctx, config);
         };
 
         const renderWeeklySummaryChart = () => {
             const labels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-            const faturamentoData = Array(7).fill(0);
-            const lucroData = Array(7).fill(0);
-
-            const now = new Date();
-            const weekStart = new Date(now.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6:1)));
-            weekStart.setHours(0,0,0,0);
-            
-            const weekEntries = allEntries.filter(e => new Date(e.date) >= weekStart);
-            const weekExpenses = allExpenses.filter(e => new Date(e.date) >= weekStart);
-
-            weekEntries.forEach(entry => {
+            const faturamentoData = Array(7).fill(0), lucroData = Array(7).fill(0);
+            const { filteredEntries, filteredExpenses } = getFilteredData('week');
+            filteredEntries.forEach(entry => {
                 const dayIndex = new Date(entry.date).getUTCDay();
                 const custoComb = ((parseFloat(entry.kmFinal) - parseFloat(entry.kmInicial)) / userSettings.autonomia) * parseFloat(entry.valorLitro);
                 faturamentoData[dayIndex] += parseFloat(entry.faturamento);
                 lucroData[dayIndex] += parseFloat(entry.faturamento) - custoComb;
             });
-            
-            weekExpenses.forEach(expense => {
+            filteredExpenses.forEach(expense => {
                 const dayIndex = new Date(expense.date).getUTCDay();
                 lucroData[dayIndex] -= parseFloat(expense.amount);
             });
-
-            createChart('weekly-summary-chart', {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [
-                        { label: 'Faturamento', data: faturamentoData, backgroundColor: 'rgba(59, 130, 246, 0.5)' },
-                        { label: 'Lucro Líquido', data: lucroData, backgroundColor: 'rgba(22, 163, 74, 0.5)' }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+            createChart('weekly-summary-chart', { type: 'bar', data: { labels, datasets: [{ label: 'Faturamento', data: faturamentoData, backgroundColor: 'rgba(59, 130, 246, 0.5)' }, { label: 'Lucro Líquido', data: lucroData, backgroundColor: 'rgba(22, 163, 74, 0.5)' }] }, options: { responsive: true, maintainAspectRatio: false } });
         };
 
         const renderMonthlyPerformanceChart = () => {
             const monthlyData = {};
             [...allEntries, ...allExpenses].forEach(item => {
                 const month = item.date.substring(0, 7);
-                if (!monthlyData[month]) {
-                    monthlyData[month] = { faturamento: 0, custo: 0, lucro: 0 };
-                }
+                if (!monthlyData[month]) monthlyData[month] = { faturamento: 0, custo: 0 };
             });
-
             allEntries.forEach(entry => {
                 const month = entry.date.substring(0, 7);
                 const custoComb = ((parseFloat(entry.kmFinal) - parseFloat(entry.kmInicial)) / userSettings.autonomia) * parseFloat(entry.valorLitro);
                 monthlyData[month].faturamento += parseFloat(entry.faturamento);
                 monthlyData[month].custo += custoComb;
             });
-            
             allExpenses.forEach(expense => {
                 const month = expense.date.substring(0, 7);
                 monthlyData[month].custo += parseFloat(expense.amount);
             });
-
             const sortedMonths = Object.keys(monthlyData).sort();
-            const labels = sortedMonths;
             const faturamentoData = sortedMonths.map(m => monthlyData[m].faturamento);
             const custoData = sortedMonths.map(m => monthlyData[m].custo);
             const lucroData = sortedMonths.map(m => monthlyData[m].faturamento - monthlyData[m].custo);
-
-             createChart('monthly-performance-chart', {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [
-                        { label: 'Faturamento', data: faturamentoData, backgroundColor: 'rgba(59, 130, 246, 0.7)' },
-                        { label: 'Custos', data: custoData, backgroundColor: 'rgba(239, 68, 68, 0.7)' },
-                        { label: 'Lucro', data: lucroData, backgroundColor: 'rgba(22, 163, 74, 0.7)' }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: false }, y: { stacked: false } } }
-            });
+            createChart('monthly-performance-chart', { type: 'bar', data: { labels: sortedMonths, datasets: [{ label: 'Faturamento', data: faturamentoData, backgroundColor: 'rgba(59, 130, 246, 0.7)' }, { label: 'Custos', data: custoData, backgroundColor: 'rgba(239, 68, 68, 0.7)' }, { label: 'Lucro', data: lucroData, backgroundColor: 'rgba(22, 163, 74, 0.7)' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: false }, y: { stacked: false } } } });
         };
 
         const renderExpenseBreakdownChart = () => {
             const expenseByCategory = {};
             allExpenses.forEach(expense => {
-                if (!expenseByCategory[expense.category]) {
-                    expenseByCategory[expense.category] = 0;
-                }
+                if (!expenseByCategory[expense.category]) expenseByCategory[expense.category] = 0;
                 expenseByCategory[expense.category] += parseFloat(expense.amount);
             });
-            
-            const labels = Object.keys(expenseByCategory);
-            const data = Object.values(expenseByCategory);
-
-            createChart('expense-breakdown-chart', {
-                type: 'doughnut',
-                data: {
-                    labels,
-                    datasets: [{
-                        data,
-                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+            createChart('expense-breakdown-chart', { type: 'doughnut', data: { labels: Object.keys(expenseByCategory), datasets: [{ data: Object.values(expenseByCategory), backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         };
 
         const initializeApp = () => {
             loadData();
-
-            document.getElementById('entry-modal').querySelector('form').innerHTML = `
-                <input type="hidden" name="id">
-                <div><label class="block text-sm font-medium text-gray-700">Data</label><input type="date" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium text-gray-700">KM Inicial</label><input type="number" name="kmInicial" placeholder="50000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                    <div><label class="block text-sm font-medium text-gray-700">KM Final</label><input type="number" name="kmFinal" placeholder="50250" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium text-gray-700">Faturamento (R$)</label><input type="number" step="0.01" name="faturamento" placeholder="350.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                    <div><label class="block text-sm font-medium text-gray-700">Nº de Viagens</label><input type="number" name="viagens" placeholder="25" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium text-gray-700">Valor Litro (R$)</label><input type="number" step="0.01" name="valorLitro" placeholder="5.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                    <div><label class="block text-sm font-medium text-gray-700">Valor Abastecido (R$)</label><input type="number" step="0.01" name="combustivelAbastecido" placeholder="120.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                </div>
-                <div class="pt-6 flex justify-end space-x-3"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Salvar</button></div>`;
-            
-            document.getElementById('expense-modal').querySelector('form').innerHTML = `
-                <input type="hidden" name="id">
-                <div><label class="block text-sm font-medium text-gray-700">Data</label><input type="date" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                <div><label class="block text-sm font-medium text-gray-700">Descrição</label><input type="text" name="description" placeholder="Ex: Troca de óleo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium text-gray-700">Categoria</label><select name="category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required><option>Manutenção</option><option>Seguro</option><option>Limpeza</option><option>Impostos</option><option>Alimentação</option><option>Outros</option></select></div>
-                    <div><label class="block text-sm font-medium text-gray-700">Valor (R$)</label><input type="number" step="0.01" name="amount" placeholder="150.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                </div>
-                <div class="pt-6 flex justify-end space-x-3"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Salvar</button></div>`;
-
-            document.getElementById('settings-modal').querySelector('form').innerHTML = `
-                <div><label class="block text-sm font-medium text-gray-700">Autonomia do Carro (KM/L)</label><input type="number" step="0.1" id="setting-autonomia" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                <div><label class="block text-sm font-medium text-gray-700">Seu Plano Atual (Demo)</label><select id="setting-tier" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="free">Gratuito (Básico)</option><option value="premium">Premium (PRO)</option></select></div>
-                <div class="pt-6 flex justify-end space-x-3"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Salvar Configurações</button></div>`;
-
+            if (!userSettings.hasSeenTutorial) {
+                document.getElementById('tutorial-modal').classList.remove('hidden');
+            }
+            document.getElementById('tip-of-the-day').textContent = `💡 Dica do Dia: ${tips[Math.floor(Math.random() * tips.length)]}`;
+            document.getElementById('entry-modal').querySelector('form').innerHTML = `<input type="hidden" name="id"><div><label class="block text-sm font-medium text-gray-700">Data</label><input type="date" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700">KM Inicial</label><input type="number" name="kmInicial" placeholder="50000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div><div><label class="block text-sm font-medium text-gray-700">KM Final</label><input type="number" name="kmFinal" placeholder="50250" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700">Faturamento (R$)</label><input type="number" step="0.01" name="faturamento" placeholder="350.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div><div><label class="block text-sm font-medium text-gray-700">Nº de Viagens</label><input type="number" name="viagens" placeholder="25" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700">Valor Litro (R$)</label><input type="number" step="0.01" name="valorLitro" placeholder="5.50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div><div><label class="block text-sm font-medium text-gray-700">Valor Abastecido (R$)</label><input type="number" step="0.01" name="combustivelAbastecido" placeholder="120.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div></div><div class="pt-6 flex justify-end space-x-3"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Salvar</button></div>`;
+            document.getElementById('expense-modal').querySelector('form').innerHTML = `<input type="hidden" name="id"><div><label class="block text-sm font-medium text-gray-700">Data</label><input type="date" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div><div><label class="block text-sm font-medium text-gray-700">Descrição</label><input type="text" name="description" placeholder="Ex: Troca de óleo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700">Categoria</label><select name="category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required><option>Manutenção</option><option>Seguro</option><option>Limpeza</option><option>Impostos</option><option>Alimentação</option><option>Outros</option></select></div><div><label class="block text-sm font-medium text-gray-700">Valor (R$)</label><input type="number" step="0.01" name="amount" placeholder="150.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div></div><div class="pt-6 flex justify-end space-x-3"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Salvar</button></div>`;
+            document.getElementById('settings-modal').querySelector('form').innerHTML = `<div><label class="block text-sm font-medium text-gray-700">Autonomia do Automóvel (KM/L)</label><input type="number" step="0.1" id="setting-autonomia" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div><div><label class="block text-sm font-medium text-gray-700">Seu Plano Atual (Demo)</label><select id="setting-tier" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="free">Gratuito (Básico)</option><option value="premium">Premium (PRO)</option></select></div><div class="pt-6 flex justify-end space-x-3"><button type="button" class="cancel-button bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Salvar Configurações</button></div>`;
             navButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const pageId = `page-${button.dataset.page}`;
@@ -563,31 +529,33 @@
                     document.getElementById(pageId).classList.remove('hidden');
                     navButtons.forEach(btn => btn.classList.remove('nav-active'));
                     button.classList.add('nav-active');
-                    if (pageId === 'page-reports' && userSettings.tier === 'premium') {
-                        renderReports();
-                    }
+                    if (pageId === 'page-reports' && userSettings.tier === 'premium') renderReports();
                 });
             });
-
             dashboardPeriodFilter.addEventListener('change', renderDashboard);
             document.getElementById('add-entry-button').addEventListener('click', () => openModal('entry-modal', 'entry-form', 'Novo Lançamento'));
             document.getElementById('add-expense-button').addEventListener('click', () => openModal('expense-modal', 'expense-form', 'Nova Despesa'));
-            
             document.getElementById('settings-button').addEventListener('click', () => {
                 document.getElementById('setting-autonomia').value = userSettings.autonomia;
                 document.getElementById('setting-tier').value = userSettings.tier;
                 document.getElementById('settings-modal').classList.remove('hidden');
             });
-
+            document.getElementById('help-button').addEventListener('click', () => document.getElementById('tutorial-modal').classList.remove('hidden'));
+            document.getElementById('close-tutorial-button').addEventListener('click', () => {
+                document.getElementById('tutorial-modal').classList.add('hidden');
+                userSettings.hasSeenTutorial = true;
+                saveData();
+            });
             document.getElementById('entry-form').addEventListener('submit', handleEntrySubmit);
             document.getElementById('expense-form').addEventListener('submit', handleExpenseSubmit);
             document.getElementById('goal-form').addEventListener('submit', (e) => {
                 e.preventDefault();
-                userSettings.metaMensal = parseFloat(document.getElementById('monthly-goal').value) || 0;
+                userSettings.metaDiaria = parseFloat(document.getElementById('goal-daily').value) || 0;
+                userSettings.metaSemanal = parseFloat(document.getElementById('goal-weekly').value) || 0;
+                userSettings.metaMensal = parseFloat(document.getElementById('goal-monthly').value) || 0;
                 saveData();
                 renderGoals();
             });
-
             document.getElementById('settings-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 userSettings.autonomia = parseFloat(document.getElementById('setting-autonomia').value) || 1;
@@ -596,39 +564,37 @@
                 renderAll();
                 closeModal('settings-modal');
             });
-            
-            document.querySelectorAll('.cancel-button').forEach(btn => btn.addEventListener('click', (e) => {
-                closeModal(e.target.closest('.fixed').id);
-            }));
-
+            document.getElementById('simulator-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const km = parseFloat(document.getElementById('sim-km').value);
+                const faturamento = parseFloat(document.getElementById('sim-faturamento').value);
+                const precoLitro = parseFloat(document.getElementById('sim-preco-litro').value);
+                const custo = (km / userSettings.autonomia) * precoLitro;
+                const lucro = faturamento - custo;
+                document.getElementById('sim-res-custo').textContent = formatCurrency(custo);
+                document.getElementById('sim-res-lucro').textContent = formatCurrency(lucro);
+            });
+            document.querySelectorAll('.cancel-button').forEach(btn => btn.addEventListener('click', (e) => closeModal(e.target.closest('.fixed').id)));
             document.getElementById('entries-table').addEventListener('click', (e) => {
                 if (e.target.classList.contains('edit-entry-btn')) {
                     const id = parseInt(e.target.dataset.id);
                     const entry = allEntries.find(item => item.id === id);
                     openModal('entry-modal', 'entry-form', 'Editar Lançamento', entry, id);
                 }
-                if (e.target.classList.contains('delete-entry-btn')) {
-                    deleteItem('entry', parseInt(e.target.dataset.id));
-                }
+                if (e.target.classList.contains('delete-entry-btn')) deleteItem('entry', parseInt(e.target.dataset.id));
             });
-
             document.getElementById('expenses-table').addEventListener('click', (e) => {
                 if (e.target.classList.contains('edit-expense-btn')) {
                     const id = parseInt(e.target.dataset.id);
                     const expense = allExpenses.find(item => item.id === id);
                     openModal('expense-modal', 'expense-form', 'Editar Despesa', expense, id);
                 }
-                if (e.target.classList.contains('delete-expense-btn')) {
-                    deleteItem('expense', parseInt(e.target.dataset.id));
-                }
+                if (e.target.classList.contains('delete-expense-btn')) deleteItem('expense', parseInt(e.target.dataset.id));
             });
-
             renderAll();
         };
-
         document.addEventListener('DOMContentLoaded', initializeApp);
     </script>
 </body>
 </html>
-
 

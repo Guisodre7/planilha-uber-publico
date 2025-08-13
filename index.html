@@ -59,6 +59,11 @@
         </nav>
 
         <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+            <!-- Challenges Banner -->
+            <div id="challenges-banner" class="bg-indigo-100 text-indigo-800 p-3 rounded-lg text-center text-sm font-medium mb-4 hidden">
+                <span id="challenges-banner-text"></span>
+            </div>
+
             <!-- Dashboard Page -->
             <div id="page-dashboard" class="page-content">
                 <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
@@ -97,6 +102,15 @@
                 <div class="bg-white p-6 rounded-lg shadow-sm">
                     <h3 class="text-lg font-semibold mb-4">Resumo da Semana</h3>
                     <div class="chart-container h-64"><canvas id="weekly-summary-chart"></canvas></div>
+                </div>
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Educação Financeira: Pílulas de Conhecimento</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-indigo-50 p-4 rounded-lg"><h4 class="font-semibold text-indigo-700 mb-2">Economia de Combustível</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Mantenha os pneus calibrados.</li><li>Evite acelerações e frenagens bruscas.</li><li>Não carregue peso desnecessário no carro.</li></ul></div>
+                        <div class="bg-amber-50 p-4 rounded-lg"><h4 class="font-semibold text-amber-700 mb-2">Manutenção Preventiva</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Troque o óleo e os filtros nos prazos corretos.</li><li>Verifique o alinhamento e balanceamento regularmente.</li><li>Esteja atento a qualquer barulho diferente do carro.</li></ul></div>
+                        <div class="bg-green-50 p-4 rounded-lg"><h4 class="font-semibold text-green-700 mb-2">Gestão Financeira</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Reserve uma % dos ganhos para despesas futuras (IPVA, seguro).</li><li>Tenha uma conta bancária separada para o trabalho.</li><li>Analise seus relatórios para entender seus dias mais lucrativos.</li></ul></div>
+                        <div class="bg-blue-50 p-4 rounded-lg"><h4 class="font-semibold text-blue-700 mb-2">Maximizando Ganhos</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Trabalhe em horários de alta demanda (tarifas dinâmicas).</li><li>Ofereça um excelente serviço para boas avaliações e gorjetas.</li><li>Conheça bem a sua cidade para otimizar rotas.</li></ul></div>
+                    </div>
                 </div>
             </div>
 
@@ -174,19 +188,6 @@
                         <div><div class="flex justify-between mb-1"><span class="text-base font-medium text-indigo-700">Progresso Meta Diária</span><span id="goal-progress-text-daily" class="text-sm font-medium"></span></div><div class="w-full bg-gray-200 rounded-full h-4"><div id="goal-progress-bar-daily" class="bg-green-500 h-4 rounded-full" style="width: 0%"></div></div></div>
                         <div><div class="flex justify-between mb-1"><span class="text-base font-medium text-indigo-700">Progresso Meta Semanal</span><span id="goal-progress-text-weekly" class="text-sm font-medium"></span></div><div class="w-full bg-gray-200 rounded-full h-4"><div id="goal-progress-bar-weekly" class="bg-blue-500 h-4 rounded-full" style="width: 0%"></div></div></div>
                         <div><div class="flex justify-between mb-1"><span class="text-base font-medium text-indigo-700">Progresso Meta Mensal</span><span id="goal-progress-text-monthly" class="text-sm font-medium"></span></div><div class="w-full bg-gray-200 rounded-full h-4"><div id="goal-progress-bar-monthly" class="bg-indigo-600 h-4 rounded-full" style="width: 0%"></div></div></div>
-                    </div>
-                </div>
-                 <div class="bg-white p-6 rounded-lg shadow-sm max-w-4xl mx-auto mt-8">
-                    <h3 class="text-lg font-semibold mb-4">Desafios</h3>
-                    <div id="challenges-container" class="space-y-2 text-sm text-gray-700"></div>
-                 </div>
-                 <div class="max-w-4xl mx-auto mt-8">
-                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Educação Financeira: Pílulas de Conhecimento</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-indigo-50 p-4 rounded-lg"><h4 class="font-semibold text-indigo-700 mb-2">Economia de Combustível</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Mantenha os pneus calibrados.</li><li>Evite acelerações e frenagens bruscas.</li><li>Não carregue peso desnecessário no carro.</li></ul></div>
-                        <div class="bg-amber-50 p-4 rounded-lg"><h4 class="font-semibold text-amber-700 mb-2">Manutenção Preventiva</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Troque o óleo e os filtros nos prazos corretos.</li><li>Verifique o alinhamento e balanceamento regularmente.</li><li>Esteja atento a qualquer barulho diferente do carro.</li></ul></div>
-                        <div class="bg-green-50 p-4 rounded-lg"><h4 class="font-semibold text-green-700 mb-2">Gestão Financeira</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Reserve uma % dos ganhos para despesas futuras (IPVA, seguro).</li><li>Tenha uma conta bancária separada para o trabalho.</li><li>Analise seus relatórios para entender seus dias mais lucrativos.</li></ul></div>
-                        <div class="bg-blue-50 p-4 rounded-lg"><h4 class="font-semibold text-blue-700 mb-2">Maximizando Ganhos</h4><ul class="space-y-2 text-sm text-gray-600 list-disc list-inside"><li>Trabalhe em horários de alta demanda (tarifas dinâmicas).</li><li>Ofereça um excelente serviço para boas avaliações e gorjetas.</li><li>Conheça bem a sua cidade para otimizar rotas.</li></ul></div>
                     </div>
                 </div>
             </div>
@@ -443,9 +444,15 @@
         };
         
         const renderChallenges = () => {
-            const container = document.getElementById('challenges-container');
+            const container = document.getElementById('challenges-banner-text');
+            const banner = document.getElementById('challenges-banner');
             let streak = userSettings.challengeStreak || 0;
-            container.innerHTML = `<div>Dias seguidos batendo a meta diária: <span class="font-bold text-indigo-600">${streak}</span></div>`;
+            if (streak > 0) {
+                container.innerHTML = `🏆 Desafio: Você está há <span class="font-bold">${streak}</span> dias seguidos a bater a sua meta diária! Continue assim!`;
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
         };
         
         const checkChallenges = () => {
